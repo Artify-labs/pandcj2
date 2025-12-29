@@ -1,0 +1,31 @@
+[
+  {
+    "id": "store-1766844051241",
+    "userId": "user_34TUUzDJTXYTsRXDj1KdnGWf9d2",
+    "name": "Preet Biswas",
+    "username": "",
+    "description": "",
+    "address": "GSG Apartment, Salarpur Khadar, Sector 101, Pillar No. 82",
+    "contact": "",
+    "email": "preetbiswas2006@gmail.com",
+    "logo": "",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2025-12-27T14:00:51.240Z",
+    "updatedAt": "2025-12-28T18:11:08.032Z"
+  },
+  {
+    "id": "default-store",
+    "userId": "default-store-user",
+    "name": "Default Store",
+    "username": "default-store",
+    "description": "Default demo store",
+    "address": "",
+    "contact": "",
+    "email": "",
+    "logo": "/assets/store-default.png",
+    "isActive": true,
+    "status": "approved",
+    "createdAt": "2025-12-27T00:00:00.000Z"
+  }
+]

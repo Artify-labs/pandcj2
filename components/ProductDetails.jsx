@@ -1,0 +1,138 @@
+'use client'
+
+import { addToCart } from "@/lib/features/cart/cartSlice";
+import { toast } from 'react-hot-toast'
+import { addToWishlist, removeFromWishlist } from '@/lib/features/wishlist/wishlistSlice'
+import { StarIcon, TagIcon, EarthIcon, CreditCardIcon, UserIcon, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useRef } from "react";
+import Image from "next/image";
+import Counter from "./Counter";
+import { useDispatch, useSelector } from "react-redux";
+
+const ProductDetails = ({ product = {} }) => {
+    const productId = product?.id ?? '';
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
+
+    const cart = useSelector(state => state.cart.cartItems || {});
+    const wishlistItems = useSelector(state => state.wishlist?.items || [])
+    const inWishlist = wishlistItems.find(i => i.id === productId)
+    const dispatch = useDispatch();
+
+    const router = useRouter();
+
+    const images = Array.isArray(product.images) && product.images.length ? product.images : ['/assets/slide_1.jpg'];
+    const ratings = Array.isArray(product.rating) && product.rating.length ? product.rating : [];
+
+    const [mainImage, setMainImage] = useState(images[0]);
+    const imgWrapRef = useRef(null);
+    const [showLens, setShowLens] = useState(false);
+    const [lensStyle, setLensStyle] = useState({});
+    const ZOOM_LEVEL = 2.5;
+    const LENS_SIZE = 260;
+
+    const addToCartHandler = () => {
+        if (!productId) return;
+        if (product.inStock === false) return toast.error('Product is out of stock')
+        dispatch(addToCart({ productId }));
+    }
+
+    const toggleWishlist = () => {
+        if (!productId) return
+        if (inWishlist) dispatch(removeFromWishlist(productId))
+        else dispatch(addToWishlist({ id: productId, name: product.name, price: product.price, images: product.images || [], category: product.category }))
+    }
+
+    const averageRating = ratings.length ? ratings.reduce((acc, item) => acc + (item.rating || 0), 0) / ratings.length : 0;
+
+    return (
+        <div className="flex max-lg:flex-col gap-12">
+            <div className="flex max-sm:flex-col-reverse gap-3">
+                <div className="flex sm:flex-col gap-3">
+                    {images.map((image, index) => (
+                        <div key={index} onClick={() => setMainImage(images[index])} className="bg-slate-100 flex items-center justify-center size-26 rounded-lg group cursor-pointer">
+                            <Image src={image} className="group-hover:scale-103 group-active:scale-95 transition" alt="" width={45} height={45} />
+                        </div>
+                    ))}
+                </div>
+                <div ref={imgWrapRef} onMouseMove={(e) => {
+                    const wrap = imgWrapRef.current;
+                    if (!wrap) return;
+                    const rect = wrap.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const bgX = x * ZOOM_LEVEL - LENS_SIZE / 2;
+                    const bgY = y * ZOOM_LEVEL - LENS_SIZE / 2;
+                    const left = x - LENS_SIZE / 2;
+                    const top = y - LENS_SIZE / 2;
+                    setLensStyle({
+                        left: `${Math.max(0, Math.min(rect.width - LENS_SIZE, left))}px`,
+                        top: `${Math.max(0, Math.min(rect.height - LENS_SIZE, top))}px`,
+                        backgroundImage: `url(${mainImage})`,
+                        backgroundSize: `${rect.width * ZOOM_LEVEL}px ${rect.height * ZOOM_LEVEL}px`,
+                        backgroundPosition: `-${Math.max(0, Math.min(rect.width * ZOOM_LEVEL - LENS_SIZE, bgX))}px -${Math.max(0, Math.min(rect.height * ZOOM_LEVEL - LENS_SIZE, bgY))}px`
+                    });
+                    setShowLens(true);
+                }} onMouseLeave={() => setShowLens(false)} className="relative flex justify-center items-center h-100 sm:size-113 bg-slate-100 rounded-lg overflow-hidden">
+                    <Image src={mainImage} alt="" width={250} height={250} />
+                    {showLens && (
+                        <div style={{
+                            position: 'absolute',
+                            width: LENS_SIZE,
+                            height: LENS_SIZE,
+                            borderRadius: '9999px',
+                            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+                            border: '1px solid rgba(255,255,255,0.6)',
+                            pointerEvents: 'none',
+                            backgroundRepeat: 'no-repeat',
+                            ...lensStyle
+                        }} />
+                    )}
+                </div>
+            </div>
+            <div className="flex-1">
+                <h1 className="text-3xl font-semibold text-slate-800">{product.name}</h1>
+                <div className='flex items-center mt-2'>
+                    {Array(5).fill('').map((_, index) => (
+                        <StarIcon key={index} size={14} className='text-transparent mt-0.5' fill={averageRating >= index + 1 ? "#00C950" : "#D1D5DB"} />
+                    ))}
+                    <p className="text-sm ml-3 text-slate-500">{ratings.length} Reviews</p>
+                </div>
+                <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
+                    <p> {currency}{product.price} </p>
+                    <p className="text-xl text-slate-500 line-through">{currency}{product.mrp}</p>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500">
+                    <TagIcon size={14} />
+                    <p>Save {product.mrp ? ((product.mrp - product.price) / product.mrp * 100).toFixed(0) : 0}% right now</p>
+                </div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 mt-8">
+                    {cart[productId] && (
+                        <div className="flex flex-col gap-3">
+                            <p className="text-lg text-slate-800 font-semibold">Quantity</p>
+                            <Counter productId={productId} />
+                        </div>
+                    )}
+                    <div className="flex gap-3 flex-1 sm:flex-initial flex-col sm:flex-row">
+                        <button onClick={() => !cart[productId] ? addToCartHandler() : router.push('/cart')} className="w-full sm:w-auto bg-slate-800 text-white px-6 py-3 text-sm font-medium rounded hover:bg-slate-900 active:scale-95 transition">
+                            {!cart[productId] ? 'Add to Cart' : 'View Cart'}
+                        </button>
+                        <button title="Add to wishlist" onClick={toggleWishlist} className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 rounded ${inWishlist ? 'bg-rose-100 text-rose-600' : 'bg-white border'} border-slate-200`}>
+                            <Heart size={16} />
+                            <span>{inWishlist ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                        </button>
+                    </div>
+                </div>
+                <hr className="border-gray-300 my-5" />
+                <div className="flex flex-col gap-4 text-slate-500">
+                    <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free shipping worldwide </p>
+                    <p className="flex gap-3"> <CreditCardIcon className="text-slate-400" /> 100% Secured Payment </p>
+                    <p className="flex gap-3"> <UserIcon className="text-slate-400" /> Trusted by top brands </p>
+                </div>
+
+            </div>
+        </div>
+    )
+}
+
+export default ProductDetails
