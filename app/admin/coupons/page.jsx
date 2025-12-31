@@ -20,7 +20,7 @@ export default function AdminCoupons() {
 
     const fetchCoupons = async () => {
         try {
-            const res = await fetch('/api/admin/coupons')
+            const res = await fetch('/api/admin/coupons', { credentials: 'include' })
             if (!res.ok) { setCoupons([]); return }
             const data = await res.json()
             setCoupons(data || [])
@@ -39,7 +39,7 @@ export default function AdminCoupons() {
                 isPublic: !!newCoupon.isPublic,
                 expiresAt: typeof newCoupon.expiresAt === 'string' ? newCoupon.expiresAt : new Date(newCoupon.expiresAt).toISOString()
             }
-            const res = await fetch('/api/admin/coupons', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            const res = await fetch('/api/admin/coupons', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             if (res.status === 409) { toast.error('Coupon code already exists'); return }
             if (!res.ok) throw new Error('Add failed')
             const created = await res.json()

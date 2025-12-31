@@ -35,7 +35,7 @@ export default function AdminDashboard() {
             try { const r = await fetch('/api/orders'); if (r.ok) orders = await r.json() } catch (e) { orders = [] }
 
             let stores = []
-            try { const r = await fetch('/api/admin/stores'); if (r.ok) stores = await r.json() } catch (e) { stores = [] }
+            try { const r = await fetch('/api/admin/stores', { credentials: 'include' }); if (r.ok) stores = await r.json() } catch (e) { stores = [] }
 
             const cancelledOrders = (orders || []).filter(o => (o.status && String(o.status).toUpperCase().startsWith('CANCEL')))
             const visibleOrders = (orders || []).filter(o => !(o.status && String(o.status).toUpperCase().startsWith('CANCEL')))

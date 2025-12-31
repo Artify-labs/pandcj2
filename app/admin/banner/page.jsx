@@ -11,7 +11,7 @@ export default function AdminBanner() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/admin/banner')
+      const res = await fetch('/api/admin/banner', { credentials: 'include' })
       const data = await res.json()
       setSettings(data || {})
     } catch (err) {
@@ -31,7 +31,7 @@ export default function AdminBanner() {
         try {
           // upload via existing upload API
           const b64 = reader.result.split(',')[1]
-          const res = await fetch('/api/admin/stores/upload', { method: 'POST', body: JSON.stringify({ data: b64, name: file.name }), headers: { 'Content-Type': 'application/json' } })
+          const res = await fetch('/api/admin/stores/upload', { method: 'POST', credentials: 'include', body: JSON.stringify({ data: b64, name: file.name }), headers: { 'Content-Type': 'application/json' } })
           const json = await res.json()
           resolve(json.url || '')
         } catch (e) { reject(e) }
@@ -43,7 +43,7 @@ export default function AdminBanner() {
   const handleSave = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/admin/banner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
+      const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
       if (!res.ok) throw new Error('Failed')
       toast.success('Saved')
     } catch (err) {

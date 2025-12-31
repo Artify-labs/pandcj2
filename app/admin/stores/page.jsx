@@ -14,7 +14,7 @@ export default function AdminStores() {
     const fetchStores = async () => {
         // Single-store mode: load only the current store when available from API
         try {
-            const res = await fetch('/api/admin/stores')
+            const res = await fetch('/api/admin/stores', { credentials: 'include' })
             if (!res.ok) throw new Error('Failed to fetch')
             const data = await res.json()
             // API returns either a single store object or an array

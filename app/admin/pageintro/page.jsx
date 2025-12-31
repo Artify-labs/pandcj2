@@ -10,7 +10,7 @@ export default function AdminPageIntro() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetch('/api/admin/pageintro').then(r => r.json()).then(data => {
+      fetch('/api/admin/pageintro', { credentials: 'include' }).then(r => r.json()).then(data => {
       if (data) {
         setTitle(data.title || '')
         setImage(data.image || '')
@@ -28,6 +28,7 @@ export default function AdminPageIntro() {
       try {
         const res = await fetch('/api/admin/stores/upload', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ data: base64, name: file.name })
         })
@@ -44,7 +45,7 @@ export default function AdminPageIntro() {
   async function handleSave() {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/pageintro', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, image }) })
+      const res = await fetch('/api/admin/pageintro', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, image }) })
       const body = await res.json()
       if (body?.success) toast.success('Saved')
       else toast.error('Save failed')
