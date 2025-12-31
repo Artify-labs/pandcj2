@@ -30,10 +30,15 @@ export default function AdminLoginPage() {
     <div className="max-w-md mx-auto py-20">
       <h1 className="text-2xl font-semibold mb-4">Admin Login</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-2 border rounded" />
+        <input autoFocus required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-2 border rounded" />
         <input required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password" className="w-full p-2 border rounded" />
-        {error && <div className="text-red-600">{error}</div>}
-        <button type="submit" disabled={loading} aria-busy={loading} className={`w-full p-2 rounded ${loading ? 'bg-gray-400 text-gray-700' : 'bg-black text-white'}`}>
+        {error && <div role="alert" className="text-red-600">{error}</div>}
+        <button
+          type="submit"
+          disabled={loading}
+          aria-busy={loading}
+          aria-disabled={loading}
+          className={`w-full p-2 rounded transition transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'bg-gray-400 text-gray-700' : 'bg-black text-white hover:opacity-90 active:scale-95 active:translate-y-0.5 cursor-pointer'}`}>
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
