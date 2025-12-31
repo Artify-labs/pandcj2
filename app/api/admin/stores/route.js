@@ -37,16 +37,33 @@ async function ensureUserExists(userId, email, name) {
   }
 }
 
-function getDefaultUserId() {
-  if (process.env.NEXT_PUBLIC_SELLER_CLERK_ID) return process.env.NEXT_PUBLIC_SELLER_CLERK_ID
-  if (process.env.ADMIN_IDS) return process.env.ADMIN_IDS.split(',')[0]
+async function getDefaultUserId() {
+  // Prefer explicit override from env first
+  if (process.env.ADMIN_USER_ID) return process.env.ADMIN_USER_ID
+  if (process.env.DEFAULT_SELLER_ID) return process.env.DEFAULT_SELLER_ID
+
+  // If DB is configured, attempt to find an admin user in MongoDB
+  const dbUrl = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
+  if (!dbUrl) return undefined
+
+  try {
+    try { await ensureMigrated() } catch (e) { /* ignore migration check errors */ }
+    const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } })
+    if (admin && admin.id) return admin.id
+    // fallback to lowercase role value if present
+    const admin2 = await prisma.user.findFirst({ where: { role: 'admin' } })
+    if (admin2 && admin2.id) return admin2.id
+  } catch (err) {
+    console.warn('Could not lookup admin user from DB', err?.message || err)
+  }
+
   return undefined
 }
 
 export async function POST(req) {
   try {
     const body = await req.json()
-    const defaultUserId = getDefaultUserId()
+    const defaultUserId = await getDefaultUserId()
     const userId = body?.userId || defaultUserId
 
     if (!userId) {
@@ -121,7 +138,7 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     const url = new URL(req.url)
-    const userId = url.searchParams.get('userId') || getDefaultUserId()
+    const userId = url.searchParams.get('userId') || await getDefaultUserId()
 
     const dbUrl = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
     if (dbUrl) {
