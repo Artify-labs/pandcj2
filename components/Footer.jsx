@@ -16,15 +16,6 @@ const Footer = () => {
 
     const linkSections = [
         {
-            title: "PRODUCTS",
-            links: [
-                { text: "T Shirt", path: '/', icon: null },
-                { text: "Headphones", path: '/', icon: null },
-                { text: "Smartphones", path: '/', icon: null },
-                { text: "Laptops", path: '/', icon: null },
-            ]
-        },
-        {
             title: "WEBSITE?",
             links: [
                 { text: "Home", path: '/', icon: null },
