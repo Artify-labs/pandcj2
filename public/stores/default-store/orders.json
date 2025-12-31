@@ -106,8 +106,9 @@
     "total": 3,
     "address": {},
     "paymentMethod": "COD",
-    "status": "ORDER_PLACED",
-    "createdAt": "2025-12-28T15:57:54.489Z"
+    "status": "SHIPPED",
+    "createdAt": "2025-12-28T15:57:54.489Z",
+    "updatedAt": "2025-12-31T07:06:48.784Z"
   },
   {
     "id": "92bf955b-9fb3-4727-a97a-cbec790c9893",

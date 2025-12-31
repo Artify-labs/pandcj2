@@ -36,7 +36,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
                     <Link href="/" className="relative text-4xl font-semibold text-slate-700">
-                        <span className="text-violet-600">aura</span>clothings<span className="text-violet-600 text-5xl leading-0">.</span>
+                        <span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-5xl leading-0">.</span>
                     </Link>
 
                     {/* Desktop Menu */}
@@ -90,7 +90,7 @@ const Navbar = () => {
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 bg-white sm:hidden">
                     <div className="flex items-center justify-between p-4 border-b">
-                        <Link href="/" className="text-2xl font-semibold">aura<span className="text-violet-600">clothings</span></Link>
+                        <Link href="/" className="text-2xl font-semibold">P&C<span className="text-yellow-600">Jewellery</span></Link>
                         <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="p-2">
                             <X />
                         </button>
@@ -108,7 +108,7 @@ const Navbar = () => {
                             <div className="flex items-center gap-2 border rounded-full px-3 py-2">
                                 <Search size={16} />
                                 <input className="w-full outline-none" type="text" placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} />
-                                <button type="submit" className="text-sm px-3 py-1 bg-violet-600 text-white rounded">Search</button>
+                                <button type="submit" className="text-sm px-3 py-1 bg-yellow-600 text-white rounded">Search</button>
                             </div>
                         </form>
 

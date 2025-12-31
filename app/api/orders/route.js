@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import prisma from '@/lib/prisma'
+import { ensureMigrated } from '@/lib/migratePublicToMongo'
 
 export async function POST(req) {
   try {
@@ -14,6 +15,12 @@ export async function POST(req) {
 
     const publicDir = path.join(process.cwd(), 'public')
     if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true })
+
+    // if DB configured, ensure public JSONs have been migrated to DB
+    const dbUrl = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
+    if (dbUrl) {
+      try { await ensureMigrated() } catch (e) { console.warn('Migration check failed', e?.message || e) }
+    }
 
     // read products to enrich items with product snapshot and storeId
     const productsFile = path.join(publicDir, 'products.json')

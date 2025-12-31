@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { ensureMigrated } from '@/lib/migratePublicToMongo'
 import { readFile, writeFile } from 'fs/promises'
 import path from 'path'
 
@@ -65,8 +66,10 @@ export async function POST(req) {
       isActive: typeof body?.isActive === 'boolean' ? body.isActive : true,
     }
 
-    const dbUrl = process.env.DATABASE_URL || process.env.NEXT_PUBLIC_DATABASE_URL
+    const dbUrl = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
     if (dbUrl) {
+      // ensure public JSON data is migrated into DB on first DB access
+      try { await ensureMigrated() } catch (e) { console.warn('Migration check failed', e?.message || e) }
       try {
         const existing = await prisma.store.findUnique({ where: { userId } })
         if (existing) {
@@ -87,7 +90,7 @@ export async function POST(req) {
         console.warn('Prisma error while creating/updating store; falling back to public/stores.json', dbErr?.message || dbErr)
       }
     } else {
-      console.warn('DATABASE_URL not set; using public/stores.json fallback')
+      console.warn('MONGODB_URI not set; using public/stores.json fallback')
     }
 
     // fallback
@@ -120,7 +123,7 @@ export async function GET(req) {
     const url = new URL(req.url)
     const userId = url.searchParams.get('userId') || getDefaultUserId()
 
-    const dbUrl = process.env.DATABASE_URL || process.env.NEXT_PUBLIC_DATABASE_URL
+    const dbUrl = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
     if (dbUrl) {
       try {
         if (userId) {
@@ -133,7 +136,7 @@ export async function GET(req) {
         console.warn('Prisma error when fetching stores; using public/stores.json fallback', dbErr?.message || dbErr)
       }
     } else {
-      console.warn('DATABASE_URL not set; using public/stores.json fallback')
+      console.warn('MONGODB_URI not set; using public/stores.json fallback')
     }
 
     const stores = await readPublicStores()

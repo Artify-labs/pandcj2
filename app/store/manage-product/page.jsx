@@ -16,7 +16,7 @@ export default function StoreManageProducts() {
         const fetchProducts = async () => {
             setLoading(true)
             try {
-                const res = await fetch('/products.json')
+                const res = await fetch('/api/products')
                 if (!res.ok) { setProducts([]); return }
                 const data = await res.json()
                 setProducts(data || [])

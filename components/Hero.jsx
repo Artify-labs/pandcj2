@@ -39,7 +39,7 @@ const Hero = () => {
                 >
                     <div className='p-5 sm:p-16'>
                         <div className='inline-flex items-center gap-3 pr-4 p-1 rounded-full text-xs sm:text-sm' style={{ background: left.newsBg || '#86efac' }}>
-                            <span className='bg-green-600 px-3 py-1 max-sm:ml-1 rounded-full text-white text-xs'>{left.newsLabel || 'NEWS'}</span>
+                            <span className='bg-yellow-600 px-3 py-1 max-sm:ml-1 rounded-full text-white text-xs'>{left.newsLabel || 'NEWS'}</span>
                             <span className='text-black'>{left.newsDescription || 'Free Shipping on Orders Above $50!'}</span> <ChevronRightIcon className='group-hover:ml-2 transition-all' size={16} />
                         </div>
                         <h2 className='text-3xl sm:text-5xl leading-[1.2] my-3 font-medium text-black max-w-xs  sm:max-w-md'>

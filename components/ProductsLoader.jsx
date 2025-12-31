@@ -10,12 +10,12 @@ export default function ProductsLoader() {
     let mounted = true
     const load = async () => {
       try {
-        const res = await fetch('/products.json')
+        const res = await fetch('/api/products')
         if (!res.ok) return
         const data = await res.json()
         if (mounted && Array.isArray(data)) dispatch(setProduct(data))
       } catch (e) {
-        console.error('Failed to load products.json', e)
+        console.error('Failed to load /api/products', e)
       }
     }
     load()

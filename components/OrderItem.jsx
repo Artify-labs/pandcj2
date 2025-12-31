@@ -38,7 +38,7 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                                     <div>
                                         {ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId)
                                             ? <Rating value={ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId).rating} />
-                                            : <button onClick={() => setRatingModal({ orderId: order.id, productId: item.product.id })} className={`text-green-500 hover:bg-green-50 transition ${order.status !== "DELIVERED" && 'hidden'}`}>Rate Product</button>
+                                            : <button onClick={() => setRatingModal({ orderId: order.id, productId: item.product.id })} className={`text-yellow-500 hover:bg-yellow-50 transition ${order.status !== "DELIVERED" && 'hidden'}`}>Rate Product</button>
                                         }</div>
                                     {ratingModal && <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />}
                                 </div>
@@ -52,7 +52,8 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                 <td className="text-left max-md:hidden">
                     <p>{order.address.name}, {order.address.street},</p>
                     <p>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country},</p>
-                    <p>{order.address.phone}</p>
+                    <p>{order.address?.phone || 'N/A'}</p>
+                    <p>Email: {order.address?.email || 'N/A'}</p>
                 </td>
 
                 <td className="text-left space-y-2 text-sm max-md:hidden">
@@ -82,7 +83,7 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                                 className={`flex items-center justify-center gap-1 rounded-full p-1 ${order.status === 'PROCESSING'
                                     ? 'text-yellow-500 bg-yellow-100'
                                     : order.status === 'DELIVERED'
-                                        ? 'text-green-500 bg-green-100'
+                                        ? 'text-yellow-500 bg-yellow-100'
                                         : 'text-slate-500 bg-slate-100'
                                     }`}
                             >
@@ -110,7 +111,8 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                 <td colSpan={5}>
                     <p>{order.address.name}, {order.address.street}</p>
                     <p>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country}</p>
-                    <p>{order.address.phone}</p>
+                    <p>{order.address?.phone || 'N/A'}</p>
+                    <p>Email: {order.address?.email || 'N/A'}</p>
                     <br />
                     <div className="flex items-center">
                         {editable && typeof onStatusChange === 'function' ? (
@@ -127,7 +129,7 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                             </select>
                         ) : (
                             <div className="mx-auto flex items-center gap-2">
-                                <span className='text-center px-3 py-1.5 rounded bg-green-100 text-green-700' >{String(order.status).replace(/_/g, ' ').toLowerCase()}</span>
+                                <span className='text-center px-3 py-1.5 rounded bg-yellow-100 text-yellow-700' >{String(order.status).replace(/_/g, ' ').toLowerCase()}</span>
                                 {onCancel && (order.status === 'ORDER_PLACED' || order.status === 'PROCESSING') && (
                                     <button onClick={() => onCancel(order.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded">Cancel</button>
                                 )}

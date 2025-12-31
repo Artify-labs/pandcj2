@@ -52,7 +52,7 @@ const Component = forwardRef(function Component(
   useAnimationFrame((_, delta) => {
     if (!hasStarted.current) return;
 
-    let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
+    let moveBy = directionFactor.current * baseVelocity * (delta / 10000);
 
     if (scrollDependent) {
       if (velocityFactor.get() < 0) directionFactor.current = -1;
@@ -66,7 +66,7 @@ const Component = forwardRef(function Component(
   return (
     <div
       ref={ref}
-      className="overflow-hidden whitespace-nowrap flex flex-nowrap items-center"
+      className="overflow-x-hidden overflow-y-visible whitespace-nowrap flex items-center"
     >
       <motion.div
         className="flex whitespace-nowrap gap-10 flex-nowrap items-center"
@@ -76,9 +76,10 @@ const Component = forwardRef(function Component(
           <span
             key={i}
             className={cn(
-              'block leading-none text-[min(8vw,80px)]',
+              'inline-block align-middle leading-[1.05] text-[min(8vw,80px)]',
               clasname
             )}
+            style={{whiteSpace: 'nowrap'}}
           >
             {children}
           </span>

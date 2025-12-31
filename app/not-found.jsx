@@ -16,7 +16,7 @@ export default function NotFound() {
         <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 mb-3">Oops! Page not found</h1>
         <p className="text-slate-500 mb-6">The page you are looking for might have been removed or temporarily unavailable.</p>
 
-        <Link href="/" className="inline-block bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-md font-medium">Back to HomePage</Link>
+        <Link href="/" className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-md font-medium">Back to HomePage</Link>
       </div>
     </div>
   )

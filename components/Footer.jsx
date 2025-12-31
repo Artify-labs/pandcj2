@@ -15,20 +15,20 @@ const Footer = () => {
     )
 
     const linkSections = [
-        {
-            title: "WEBSITE?",
-            links: [
-                { text: "Home", path: '/', icon: null },
-                { text: "Privacy Policy", path: '/', icon: null },
-                { text: "Become Plus Member", path: '/pricing', icon: null },
-            ]
-        },
+        // {
+        //     title: "WEBSITE?",
+        //     links: [
+        //         { text: "Home", path: '/', icon: null },
+        //         { text: "Privacy Policy", path: '/', icon: null },
+        //         { text: "Become Plus Member", path: '/pricing', icon: null },
+        //     ]
+        // },
         {
             title: "CONTACT",
             links: [
-                { text: "+91 7044457914", path: '/', icon: PhoneIcon },
-                { text: "contact@example.com", path: '/', icon: MailIcon },
-                { text: "West Bengal, Inida", path: '/', icon: MapPinIcon }
+                { text: "+91 9804915374", path: '/', icon: PhoneIcon },
+                { text: "pandcjewellery@gmail.com", path: '/', icon: MailIcon },
+                { text: "Noida, India", path: '/', icon: MapPinIcon }
             ]
         }
     ];
@@ -45,9 +45,9 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30 text-slate-500">
                     <div>
                         <Link href="/" className="text-4xl font-semibold text-slate-700">
-                            <span className="text-violet-600">aura</span>clothings<span className="text-violet-600 text-5xl leading-0">.</span>
+                            <span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-5xl leading-0">.</span>
                         </Link>
-                        <p className="max-w-102.5 mt-6 text-sm">Welcome to auraclothings, your ultimate destination for the latest and cool fashion. From printed t-shirts and hoodies to daily fashion, we bring you the coolest trends — all in one place.</p>
+                        <p className="max-w-102.5 mt-6 text-sm">Welcome to P&C Jewellery, your ultimate destination for the latest and cool ornaments. From designable earrings and necklace to daily wearables, we bring you the most elegant trends — all in one place.</p>
                         <div className="flex items-center gap-3 mt-5">
                             {socialIcons.map((item, i) => (
                                 <Link href={item.link} key={i} className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:scale-105 hover:border border-slate-300 transition rounded-full">
@@ -73,7 +73,7 @@ const Footer = () => {
                     </div>
                 </div>
                 <p className="py-4 text-sm text-slate-500">
-                    Copyright 2025 © gocart All Right Reserved.
+                    Copyright 2026 © pandcjewellery All Right Reserved.
                 </p>
             </div>
         </footer>

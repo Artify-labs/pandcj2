@@ -2,6 +2,7 @@
 import { useRef, useEffect } from 'react'
 import { Provider } from 'react-redux'
 import { makeStore } from '../lib/store'
+import { clearCart } from '@/lib/features/cart/cartSlice'
 
 const CART_STORAGE_KEY = 'gocart_cart_v1'
 
@@ -76,6 +77,23 @@ export default function StoreProvider({ children }) {
       unsubscribe()
       if (typeof window !== 'undefined') window.removeEventListener('beforeunload', flush)
     }
+  }, [])
+
+  // If the URL contains ?resetCart=1, force-clear persisted cart and Redux state once
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('resetCart') === '1') {
+        // remove persisted key
+        try { window.localStorage.removeItem(CART_STORAGE_KEY) } catch (e) {}
+        // dispatch clearCart to reset Redux state
+        try { storeRef.current.dispatch(clearCart()) } catch (e) {}
+        // remove the query param and reload without creating history entry
+        url.searchParams.delete('resetCart')
+        window.location.replace(url.toString())
+      }
+    } catch (e) {}
   }, [])
 
   return <Provider store={storeRef.current}>{children}</Provider>

@@ -112,7 +112,7 @@ export default function Cart() {
                     <div className="w-80">
                         <div className="bg-white p-4 rounded shadow">
                             <div className="flex gap-2">
-                                <button className="flex-1 py-2 px-3 bg-violet-600 text-white rounded">Cart</button>
+                                <button className="flex-1 py-2 px-3 bg-yellow-600 text-white rounded">Cart</button>
                                 <a href="#wishlist" className="flex-1 py-2 px-3 text-slate-600 rounded border">Wishlist</a>
                             </div>
                             <div className="mt-4">
@@ -158,7 +158,7 @@ export default function Cart() {
                 <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Your cart is empty and sad :(</h1>
                 <p className="text-slate-500 mt-2">Add something to make it happy!</p>
                 <div className="mt-6">
-                    <a href="/shop" className="inline-block bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-md">Continue Shopping</a>
+                    <a href="/shop" className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-md">Continue Shopping</a>
                 </div>
             </div>
         </div>

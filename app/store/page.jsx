@@ -33,22 +33,15 @@ export default function Dashboard() {
             // products
             let products = []
             try {
-                const res = await fetch('/products.json')
+                const res = await fetch('/api/products')
                 if (res.ok) products = await res.json()
             } catch (e) { products = [] }
 
-            // orders (try per-store first)
+            // orders (query API by store)
             let orders = []
             try {
-                const res = await fetch(`/stores/${storeId}/orders.json`)
+                const res = await fetch(`/api/orders?storeId=${encodeURIComponent(storeId)}`)
                 if (res.ok) orders = await res.json()
-                else {
-                    const r2 = await fetch('/orders.json')
-                    if (r2.ok) {
-                        const all = await r2.json()
-                        orders = all.filter(o => o.orderItems && o.orderItems.some(i => (i.storeId || 'default-store') === storeId))
-                    }
-                }
             } catch (e) { orders = [] }
 
             // filter cancelled
