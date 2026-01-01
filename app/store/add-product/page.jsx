@@ -104,7 +104,7 @@ export default function StoreAddProduct() {
                     </label>
                     )
                 })
-                }}
+                }
             </div>
 
             <label htmlFor="" className="flex flex-col gap-2 my-6 ">
