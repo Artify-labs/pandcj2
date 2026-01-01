@@ -41,23 +41,27 @@ export async function POST(req) {
         const fileField = `data:${mimeType};base64,${base64Data}`
 
         // Build public_id without slashes (Cloudinary 'display name' may reject slashes).
-        // Extract filename without extension
-        const baseName = path.parse(safeName).name
+        // Extract filename without extension - use basename to avoid any path components
+        const baseName = path.basename(safeName, path.extname(safeName))
+        
         // Sanitize baseName: ONLY alphanumeric, dash, underscore (no dots, no slashes, no special chars)
         const sanitizedBaseName = baseName
+          .replace(/\\/g, '_')  // Remove backslashes first (Windows paths)
+          .replace(/\//g, '_')  // Remove forward slashes
           .replace(/[^a-zA-Z0-9_-]/g, '_')  // Replace ALL special chars (including dots) with underscore
           .replace(/_{2,}/g, '_')  // Collapse multiple underscores into one
           .replace(/^_+|_+$/g, '')  // Remove leading/trailing underscores
         
-        const rawUserFolder = (body && body.userId) ? String(body.userId) : (process.env.DEFAULT_SELLER_ID ? String(process.env.DEFAULT_SELLER_ID) : null)
-        // Sanitize userFolder to safe characters
-        const userFolder = rawUserFolder 
-          ? rawUserFolder.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '')
-          : null
-        
-        // Use timestamp for uniqueness, avoid folder paths
+        // Use timestamp for uniqueness, avoid folder paths - no userFolder in public_id
         const timestamp = Math.floor(Date.now() / 1000)
-        const publicId = `store_${timestamp}_${sanitizedBaseName}`
+        const publicId = `product_${timestamp}_${sanitizedBaseName}`
+        
+        // Final safety check - ensure absolutely no slashes
+        if (publicId.includes('/') || publicId.includes('\\')) {
+          throw new Error('Invalid filename: contains path separators after sanitization')
+        }
+        
+        console.log('Cloudinary upload - public_id:', publicId)
 
         // Collect params to sign (only non-empty, and exclude api_key and file)
         const paramsToSign = {}
@@ -99,7 +103,11 @@ export async function POST(req) {
         }
       } catch (cloudErr) {
         console.error('Cloudinary upload error', cloudErr)
-        // continue to fallback
+        // If it's our validation error, return it immediately
+        if (cloudErr.message && cloudErr.message.includes('Invalid filename')) {
+          return new Response(JSON.stringify({ error: { message: cloudErr.message } }), { status: 400 })
+        }
+        // Otherwise continue to fallback
       }
     } else {
       // Cloudinary not fully configured for signed uploads
