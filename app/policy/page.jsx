@@ -4,18 +4,19 @@ import { assets } from '@/assets/assets'
 
 export default function PrivacyPolicy() {
   return (
-    <div className="text-slate-700 mb-28">
-      <div className="flex items-center gap-4 mb-6">
-        <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={64} height={64} className="rounded" />
-        <div>
-          <h1 className="text-3xl font-semibold">Privacy Policy</h1>
-          <p className="text-sm text-slate-500">How we collect, use and protect your data</p>
+    <div className="text-slate-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex items-center gap-4 mb-6">
+          <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={72} height={72} className="rounded" />
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800">Privacy Policy</h1>
+            <p className="text-sm text-slate-500 mt-1">How we collect, use and protect your data</p>
+          </div>
         </div>
-      </div>
 
-      <PageTitle heading="Privacy Policy" text="Last updated: January 1, 2026" linkText="" />
+        <PageTitle heading="Privacy Policy" text="Last updated: January 1, 2026" linkText="" />
 
-      <section className="prose prose-slate max-w-none">
+        <section className="prose prose-slate prose-lg mx-auto max-w-3xl text-slate-700 leading-7">
         <h3>Overview</h3>
         <p>P&amp;C Jewellery (“we”, “us”) respects your privacy. This policy explains what information we collect, why we collect it, and how you can manage it.</p>
 
@@ -51,7 +52,8 @@ export default function PrivacyPolicy() {
 
         <h3>Contact</h3>
         <p>For privacy questions contact: pandcjewellery@gmail.com or call +91 9804915374</p>
-      </section>
+        </section>
+      </div>
     </div>
   )
 }

@@ -4,18 +4,19 @@ import { assets } from '@/assets/assets'
 
 export default function TermsPage() {
   return (
-    <div className="text-slate-700 mb-28">
-      <div className="flex items-center gap-4 mb-6">
-        <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={64} height={64} className="rounded" />
-        <div>
-          <h1 className="text-3xl font-semibold">Terms of Service</h1>
-          <p className="text-sm text-slate-500">Rules and regulations for using P&amp;C Jewellery</p>
+    <div className="text-slate-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex items-center gap-4 mb-6">
+          <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={72} height={72} className="rounded" />
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800">Terms of Service</h1>
+            <p className="text-sm text-slate-500 mt-1">Rules and regulations for using P&amp;C Jewellery</p>
+          </div>
         </div>
-      </div>
 
-      <PageTitle heading="Terms of Service" text="Effective: January 1, 2026" linkText="" />
+        <PageTitle heading="Terms of Service" text="Effective: January 1, 2026" linkText="" />
 
-      <section className="prose prose-slate max-w-none">
+        <section className="prose prose-slate prose-lg mx-auto max-w-3xl text-slate-700 leading-7">
         <h3>Acceptance</h3>
         <p>By using our website and services you agree to these Terms. Please read them carefully. If you do not agree to these terms, please do not use our services.</p>
 
@@ -64,7 +65,8 @@ export default function TermsPage() {
 
         <h3>Contact</h3>
         <p>Questions about these Terms: pandcjewellery@gmail.com or +91 9804915374</p>
-      </section>
+        </section>
+      </div>
     </div>
   )
 }
