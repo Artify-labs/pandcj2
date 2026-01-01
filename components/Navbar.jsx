@@ -38,7 +38,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
                     <Link href="/" className="relative text-4xl font-semibold text-slate-700 flex items-center gap-3">
-                        <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={40} height={40} className="rounded" />
+                        
                         <span className="text-2xl font-semibold text-slate-800"><span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-4xl leading-0">.</span></span>
                     </Link>
 
