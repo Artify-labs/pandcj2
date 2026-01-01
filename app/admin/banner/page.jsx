@@ -55,16 +55,37 @@ export default function AdminBanner() {
   const onFileChange = async (e, path) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = await handleFile(file)
-    setSettings(prev => {
-      const copy = JSON.parse(JSON.stringify(prev || {}))
-      // set nested path like 'left.bgImage'
-      const parts = path.split('.')
-      let cur = copy
-      for (let i=0;i<parts.length-1;i++) { cur[parts[i]] = cur[parts[i]] || {}; cur = cur[parts[i]] }
-      cur[parts[parts.length-1]] = url
-      return copy
-    })
+
+    // immediate preview: read data URL and set it in UI while upload runs
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const dataUrl = reader.result
+      setSettings(prev => {
+        const copy = JSON.parse(JSON.stringify(prev || {}))
+        const parts = path.split('.')
+        let cur = copy
+        for (let i=0;i<parts.length-1;i++) { cur[parts[i]] = cur[parts[i]] || {}; cur = cur[parts[i]] }
+        cur[parts[parts.length-1]] = dataUrl
+        return copy
+      })
+
+      try {
+        const uploadedUrl = await handleFile(file)
+        if (uploadedUrl) {
+          setSettings(prev => {
+            const copy = JSON.parse(JSON.stringify(prev || {}))
+            const parts = path.split('.')
+            let cur = copy
+            for (let i=0;i<parts.length-1;i++) { cur[parts[i]] = cur[parts[i]] || {}; cur = cur[parts[i]] }
+            cur[parts[parts.length-1]] = uploadedUrl
+            return copy
+          })
+        }
+      } catch (err) {
+        console.error('Upload failed', err)
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   if (loading) return <Loading />

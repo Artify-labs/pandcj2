@@ -6,10 +6,12 @@ import crypto from 'crypto'
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { filename, data } = body || {}
+    // accept either `filename` or `name` from various callers
+    const { filename, name, data } = body || {}
+    const resolvedFilename = filename || name
 
-    if (!filename || !data) {
-      return new Response(JSON.stringify({ error: 'filename and data are required' }), { status: 400 })
+    if (!resolvedFilename || !data) {
+      return new Response(JSON.stringify({ error: 'filename (or name) and data are required' }), { status: 400 })
     }
 
     // Data may be a data URL like 'data:image/png;base64,...'
@@ -27,7 +29,7 @@ export async function POST(req) {
       buffer = Buffer.from(data, 'base64')
     }
 
-    const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const safeName = String(resolvedFilename).replace(/[^a-zA-Z0-9._-]/g, '_')
 
     // If Cloudinary is configured, attempt a signed server upload and return the secure URL.
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME
@@ -76,7 +78,8 @@ export async function POST(req) {
           // fall through to local/tmp fallback
         } else {
           const bodyJson = await res.json()
-          return new Response(JSON.stringify({ url: bodyJson.secure_url, provider: 'cloudinary', raw: bodyJson }), { status: 201 })
+          // include the dataUrl for clients that want an immediate preview; primary preview should use `url`
+          return new Response(JSON.stringify({ url: bodyJson.secure_url, provider: 'cloudinary', raw: bodyJson, dataUrl: `data:${mimeType};base64,${base64Data}` }), { status: 201 })
         }
       } catch (cloudErr) {
         console.error('Cloudinary upload error', cloudErr)
@@ -94,7 +97,7 @@ export async function POST(req) {
       const filePath = path.join(uploadsDir, safeName)
       fs.writeFileSync(filePath, buffer)
       const publicUrl = `/uploads/${safeName}`
-      return new Response(JSON.stringify({ url: publicUrl }), { status: 201 })
+      return new Response(JSON.stringify({ url: publicUrl, dataUrl: `data:${mimeType};base64,${base64Data}` }), { status: 201 })
     } catch (err) {
       // If filesystem is read-only, fall back to tmp dir
       if (err && err.code === 'EROFS') {
