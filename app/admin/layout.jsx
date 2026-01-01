@@ -4,8 +4,8 @@ import { cookies } from "next/headers";
 import { MongoClient } from 'mongodb'
 
 export const metadata = {
-    title: "GoCart. - Admin",
-    description: "GoCart. - Admin",
+    title: "P&C Jewellery - Admin",
+    description: "P&C Jewellery - Admin",
 };
 
 export default async function RootAdminLayout({ children }) {

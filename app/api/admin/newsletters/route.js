@@ -1,9 +1,28 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { MongoClient } from 'mongodb'
+import { randomUUID } from 'crypto'
 
 export async function GET() {
   try {
+    // Try DB first
+    try {
+      const uri = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
+      const dbName = process.env.MONGODB_DB || process.env.NEXT_PUBLIC_MONGODB_DB || (uri && uri.split('/').pop())
+      if (uri && dbName) {
+        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+        await client.connect()
+        try {
+          const col = client.db(dbName).collection('newsletters')
+          const list = await col.find({}).sort({ createdAt: -1 }).toArray()
+          if (Array.isArray(list)) return new Response(JSON.stringify(list), { status: 200 })
+        } finally { try { await client.close() } catch (e) {} }
+      }
+    } catch (e) {
+      console.warn('Newsletter DB read failed', e?.message || e)
+    }
+
     const publicDir = path.join(process.cwd(), 'public')
     const file = path.join(publicDir, 'newsletters.json')
     if (!fs.existsSync(file)) return new Response(JSON.stringify([]), { status: 200 })
@@ -22,7 +41,30 @@ export async function POST(req) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return new Response(JSON.stringify({ error: 'Invalid email' }), { status: 400 })
     }
+    // Try to persist to DB first
+    try {
+      const uri = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
+      const dbName = process.env.MONGODB_DB || process.env.NEXT_PUBLIC_MONGODB_DB || (uri && uri.split('/').pop())
+      if (uri && dbName) {
+        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+        await client.connect()
+        try {
+          const col = client.db(dbName).collection('newsletters')
+          const emailLower = email.toLowerCase()
+          const existing = await col.findOne({ emailLower })
+          if (existing) {
+            return new Response(JSON.stringify({ ok: true, message: 'Already subscribed', entry: existing }), { status: 200 })
+          }
+          const entry = { id: randomUUID(), email, emailLower, createdAt: new Date().toISOString() }
+          await col.insertOne(entry)
+          return new Response(JSON.stringify({ ok: true, entry }), { status: 201 })
+        } finally { try { await client.close() } catch (e) {} }
+      }
+    } catch (e) {
+      console.warn('Newsletter DB write failed', e?.message || e)
+    }
 
+    // Fallback to filesystem
     const publicDir = path.join(process.cwd(), 'public')
     const file = path.join(publicDir, 'newsletters.json')
     let list = []

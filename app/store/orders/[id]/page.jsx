@@ -1,31 +1,55 @@
 import fs from 'fs'
 import path from 'path'
+import prisma from '@/lib/prisma'
 
 export default async function OrderDetailPage({ params }) {
   const { id } = await params
   const publicDir = path.join(process.cwd(), 'public')
   const storeId = 'default-store'
 
-  // try per-store orders first
-  const storeOrdersPath = path.join(publicDir, 'stores', storeId, 'orders.json')
+  // Try DB first
   let order = null
-
-  if (fs.existsSync(storeOrdersPath)) {
-    try {
-      const raw = fs.readFileSync(storeOrdersPath, 'utf8') || '[]'
-      const list = JSON.parse(raw)
-      order = list.find(o => o.id === id) || null
-    } catch (e) { order = null }
+  try {
+    order = await prisma.order.findUnique({ where: { id }, include: { orderItems: { include: { product: true } }, address: true } })
+    if (order && Array.isArray(order.orderItems)) {
+      for (const it of order.orderItems) {
+        if (!it.product || !it.product.id) {
+          try {
+            const prod = await prisma.product.findUnique({ where: { id: it.productId } })
+            if (prod) it.product = prod
+            else it.product = { id: it.productId || null, name: (it.product && it.product.name) || 'Product', images: [] }
+          } catch (e) {
+            it.product = { id: it.productId || null, name: (it.product && it.product.name) || 'Product', images: [] }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    order = null
   }
 
+  // Fallback to filesystem if DB not available or order not found
   if (!order) {
-    const ordersPath = path.join(publicDir, 'orders.json')
-    if (fs.existsSync(ordersPath)) {
+    // try per-store orders first
+    const storeOrdersPath = path.join(publicDir, 'stores', storeId, 'orders.json')
+
+    if (fs.existsSync(storeOrdersPath)) {
       try {
-        const raw = fs.readFileSync(ordersPath, 'utf8') || '[]'
+        const raw = fs.readFileSync(storeOrdersPath, 'utf8') || '[]'
         const list = JSON.parse(raw)
         order = list.find(o => o.id === id) || null
       } catch (e) { order = null }
+    }
+
+    if (!order) {
+      const ordersPath = path.join(publicDir, 'orders.json')
+      if (fs.existsSync(ordersPath)) {
+        try {
+          const raw = fs.readFileSync(ordersPath, 'utf8') || '[]'
+          const list = JSON.parse(raw)
+          order = list.find(o => o.id === id) || null
+        } catch (e) { order = null }
+      }
     }
   }
 
