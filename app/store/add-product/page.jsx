@@ -72,7 +72,7 @@ export default function StoreAddProduct() {
             toast.success('Product added')
             // reset form
             setProductInfo({ name: '', description: '', mrp: 0, price: 0, category: '' })
-            setImages({ 1: null, 2: null, 3: null, 4: null })
+            setImages({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
         } catch (err) {
             console.error(err)
             toast.error('Could not add product')
@@ -87,9 +87,11 @@ export default function StoreAddProduct() {
             <p className="mt-7">Product Images</p>
 
             <div htmlFor="" className="flex gap-3 mt-4">
-                {Object.keys(images).map((key) => (
+                {Object.keys(images).map((key) => {
+                    const image = images[key]
+                    return (
                     <label key={key} htmlFor={`images${key}`}>
-                        <Image width={300} height={300} className='h-15 w-auto border border-slate-200 rounded cursor-pointer' src={images[key].preview ? images[key].preview : assets.upload_area} alt="" />
+                        <Image width={300} height={300} className='h-15 w-auto border border-slate-200 rounded cursor-pointer' src={image?.preview ? image.preview : assets.upload_area} alt="" />
                         <input type="file" accept='image/*' id={`images${key}`} onChange={async e => {
                             const file = e.target.files[0]
                             if (!file) return
@@ -100,7 +102,9 @@ export default function StoreAddProduct() {
                             reader.readAsDataURL(file)
                         }} hidden />
                     </label>
-                ))}
+                    )
+                })
+                }}
             </div>
 
             <label htmlFor="" className="flex flex-col gap-2 my-6 ">
