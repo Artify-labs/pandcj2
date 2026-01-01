@@ -79,7 +79,7 @@ const Component = forwardRef(function Component(
               'inline-block align-middle leading-[1.05] text-[min(8vw,80px)] bg-gradient-to-r from-yellow-400 via-yellow-300 to-red-500 bg-clip-text text-transparent',
               clasname
             )}
-            style={{whiteSpace: 'normal', width: '100%'}}
+            style={{whiteSpace: 'nowrap', width: 'auto'}}
           >
             {children}
           </span>
