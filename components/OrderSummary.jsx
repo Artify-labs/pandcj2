@@ -151,6 +151,31 @@ const OrderSummary = ({ totalPrice, items }) => {
     }
 
     useEffect(() => {
+        // Load selected address from localStorage on mount
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('selectedAddress')
+            if (saved) {
+                try {
+                    setSelectedAddress(JSON.parse(saved))
+                } catch (e) {
+                    localStorage.removeItem('selectedAddress')
+                }
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        // Save selected address to localStorage whenever it changes
+        if (typeof window !== 'undefined') {
+            if (selectedAddress) {
+                localStorage.setItem('selectedAddress', JSON.stringify(selectedAddress))
+            } else {
+                localStorage.removeItem('selectedAddress')
+            }
+        }
+    }, [selectedAddress])
+
+    useEffect(() => {
         // Use Clerk's isSignedIn where available, fallback to localStorage check for older flows
         if (typeof window !== 'undefined') {
             const authKeys = ['user', 'clerkUserId', 'authToken', 'token']

@@ -42,16 +42,21 @@ export async function POST(req) {
 
         // Build public_id without slashes (Cloudinary 'display name' may reject slashes).
         const baseName = path.parse(safeName).name
-        // Sanitize baseName to remove any remaining problematic characters
-        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_')
+        // Sanitize baseName: remove all special chars, only allow alphanumeric, dash, underscore
+        const sanitizedBaseName = baseName
+          .replace(/[^a-zA-Z0-9_-]/g, '_')  // Replace special chars with underscore
+          .replace(/_{2,}/g, '_')  // Collapse multiple underscores into one
+          .replace(/^_+|_+$/g, '')  // Remove leading/trailing underscores
+        
         const rawUserFolder = (body && body.userId) ? String(body.userId) : (process.env.DEFAULT_SELLER_ID ? String(process.env.DEFAULT_SELLER_ID) : null)
-        // sanitize userFolder to safe characters
-        const userFolder = rawUserFolder ? rawUserFolder.replace(/[^a-zA-Z0-9._-]/g, '_') : null
-        // avoid using slashes in public_id; use underscores to separate parts
-        const publicId = userFolder ? `stores_${userFolder}_${sanitizedBaseName}` : `pandc_${sanitizedBaseName}`
-
-        // Use timestamp and include upload_preset if present (preset is signed in your Cloudinary config)
+        // Sanitize userFolder to safe characters
+        const userFolder = rawUserFolder 
+          ? rawUserFolder.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '')
+          : null
+        
+        // Use timestamp for uniqueness, avoid folder paths
         const timestamp = Math.floor(Date.now() / 1000)
+        const publicId = `store_${timestamp}_${sanitizedBaseName}`
 
         // Collect params to sign (only non-empty, and exclude api_key and file)
         const paramsToSign = {}

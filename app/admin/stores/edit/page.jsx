@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
 
@@ -8,6 +9,7 @@ export default function AdminStoreEdit() {
   const router = useRouter()
   const params = useSearchParams()
   const storeId = params?.get("id")
+  const { user } = useUser()
 
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({
@@ -93,9 +95,18 @@ export default function AdminStoreEdit() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!user?.id) {
+      toast.error('User not authenticated')
+      return
+    }
+
     await toast.promise(
       (async () => {
-        const payload = { ...form }
+        const payload = { 
+          ...form,
+          userId: user.id
+        }
         const url = storeId ? `/api/admin/stores/${storeId}` : `/api/admin/stores`
         const method = storeId ? 'PUT' : 'POST'
 
@@ -105,13 +116,16 @@ export default function AdminStoreEdit() {
           body: JSON.stringify(payload),
         })
 
-        if (!res.ok) throw new Error('Save failed')
+        if (!res.ok) {
+          const error = await res.json()
+          throw new Error(error.error || 'Save failed')
+        }
         router.push('/admin/stores')
       })(),
       {
         loading: 'Saving...',
         success: 'Store updated',
-        error: 'Failed to save',
+        error: (err) => err.message || 'Failed to save',
       }
     )
   }
