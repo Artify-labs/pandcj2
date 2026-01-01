@@ -1,6 +1,8 @@
 'use client'
 import { Search, ShoppingCart, Heart, Package, Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from 'next/image'
+import { assets } from '@/assets/assets'
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -35,8 +37,9 @@ const Navbar = () => {
             <div className="mx-6">
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
-                    <Link href="/" className="relative text-4xl font-semibold text-slate-700">
-                        <span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-5xl leading-0">.</span>
+                    <Link href="/" className="relative text-4xl font-semibold text-slate-700 flex items-center gap-3">
+                        <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={40} height={40} className="rounded" />
+                        <span className="text-2xl font-semibold text-slate-800"><span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-4xl leading-0">.</span></span>
                     </Link>
 
                     {/* Desktop Menu */}
@@ -89,8 +92,11 @@ const Navbar = () => {
             {/* Mobile Overlay Menu */}
                     {mobileOpen && (
                 <div className="fixed inset-0 z-50 bg-white sm:hidden text-slate-700">
-                    <div className="flex items-center justify-between p-4 border-b">
-                        <Link href="/" className="text-2xl font-semibold">P&C<span className="text-yellow-600">Jewellery</span></Link>
+                        <div className="flex items-center justify-between p-4 border-b">
+                        <Link href="/" className="flex items-center gap-3">
+                            <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={36} height={36} className="rounded" />
+                            <span className="text-2xl font-semibold">P&C<span className="text-yellow-600">Jewellery</span></span>
+                        </Link>
                         <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="p-2">
                             <X />
                         </button>

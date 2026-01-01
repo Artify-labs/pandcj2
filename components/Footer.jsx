@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from 'next/image'
+import { assets } from '@/assets/assets'
 
 const Footer = () => {
 
@@ -43,8 +45,9 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-12 border-b border-slate-200 text-slate-600">
                     <div>
-                        <Link href="/" className="text-4xl font-semibold text-slate-800">
-                            <span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-5xl leading-0">.</span>
+                        <Link href="/" className="flex items-center gap-4">
+                            <Image src={assets.pandcjewellery} alt="P&C Jewellery" width={56} height={56} className="rounded" />
+                            <div className="text-2xl font-semibold text-slate-800"><span className="text-yellow-600">P&C</span>Jewellery<span className="text-yellow-600 text-4xl leading-0">.</span></div>
                         </Link>
                         <p className="max-w-xl mt-6 text-sm text-slate-600 leading-relaxed">Welcome to P&C Jewellery, your ultimate destination for the latest and cool ornaments. From designable earrings and necklace to daily wearables, we bring you the most elegant trends — all in one place.</p>
                         <div className="flex items-center gap-3 mt-6">
