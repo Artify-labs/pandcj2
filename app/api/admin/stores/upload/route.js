@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import crypto from 'crypto'
 
 export async function POST(req) {
   try {
@@ -28,34 +29,62 @@ export async function POST(req) {
 
     const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
 
-    // If Cloudinary is configured, upload there and return the secure URL.
+    // If Cloudinary is configured, attempt a signed server upload and return the secure URL.
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET
-    if (cloudName && uploadPreset) {
+    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET || ''
+    const apiKey = process.env.CLOUDINARY_API_KEY
+    const apiSecret = process.env.CLOUDINARY_API_SECRET
+    if (cloudName && apiKey && apiSecret) {
       try {
-        const form = new FormData()
         const fileField = `data:${mimeType};base64,${base64Data}`
+
+        // Build public_id with optional folder (use DEFAULT_SELLER_ID if provided)
+        const baseName = path.parse(safeName).name
+        const userFolder = (body && body.userId) ? String(body.userId) : (process.env.DEFAULT_SELLER_ID ? String(process.env.DEFAULT_SELLER_ID) : null)
+        const publicId = userFolder ? `stores/${userFolder}/${baseName}` : `pandc/${baseName}`
+
+        // Use timestamp and include upload_preset if present (preset is signed in your Cloudinary config)
+        const timestamp = Math.floor(Date.now() / 1000)
+
+        // Collect params to sign (only non-empty, and exclude api_key and file)
+        const paramsToSign = {}
+        paramsToSign.timestamp = timestamp
+        if (uploadPreset) paramsToSign.upload_preset = uploadPreset
+        if (publicId) paramsToSign.public_id = publicId
+
+        // Create the string to sign: keys sorted alphabetically
+        const keys = Object.keys(paramsToSign).sort()
+        const toSign = keys.map(k => `${k}=${paramsToSign[k]}`).join('&')
+        const signature = crypto.createHash('sha1').update(toSign + apiSecret).digest('hex')
+
+        const form = new FormData()
         form.append('file', fileField)
-        form.append('upload_preset', uploadPreset)
-        form.append('public_id', path.parse(safeName).name)
+        form.append('api_key', apiKey)
+        form.append('timestamp', String(timestamp))
+        form.append('signature', signature)
+        form.append('public_id', publicId)
+        if (uploadPreset) form.append('upload_preset', uploadPreset)
 
         const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
           method: 'POST',
-          body: form
+          body: form,
         })
+
         if (!res.ok) {
           const text = await res.text()
           console.error('Cloudinary upload failed', res.status, text)
           // fall through to local/tmp fallback
         } else {
           const bodyJson = await res.json()
-          // return secure URL
           return new Response(JSON.stringify({ url: bodyJson.secure_url, provider: 'cloudinary', raw: bodyJson }), { status: 201 })
         }
       } catch (cloudErr) {
         console.error('Cloudinary upload error', cloudErr)
         // continue to fallback
       }
+    } else {
+      // Cloudinary not fully configured for signed uploads
+      // console.debug('Cloudinary not configured for signed uploads')
     }
 
     // Fallback: try writing to public/uploads, then /tmp if necessary.
@@ -70,7 +99,7 @@ export async function POST(req) {
       // If filesystem is read-only, fall back to tmp dir
       if (err && err.code === 'EROFS') {
         try {
-          const tmpDir = path.join(os.tmpdir(), 'gocart-uploads')
+          const tmpDir = path.join(os.tmpdir(), 'pandc-uploads')
           if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true })
           const tmpPath = path.join(tmpDir, safeName)
           fs.writeFileSync(tmpPath, buffer)
