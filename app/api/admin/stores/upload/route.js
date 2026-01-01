@@ -40,10 +40,13 @@ export async function POST(req) {
       try {
         const fileField = `data:${mimeType};base64,${base64Data}`
 
-        // Build public_id with optional folder (use DEFAULT_SELLER_ID if provided)
+        // Build public_id without slashes (Cloudinary 'display name' may reject slashes).
         const baseName = path.parse(safeName).name
-        const userFolder = (body && body.userId) ? String(body.userId) : (process.env.DEFAULT_SELLER_ID ? String(process.env.DEFAULT_SELLER_ID) : null)
-        const publicId = userFolder ? `stores/${userFolder}/${baseName}` : `pandc/${baseName}`
+        const rawUserFolder = (body && body.userId) ? String(body.userId) : (process.env.DEFAULT_SELLER_ID ? String(process.env.DEFAULT_SELLER_ID) : null)
+        // sanitize userFolder to safe characters
+        const userFolder = rawUserFolder ? rawUserFolder.replace(/[^a-zA-Z0-9._-]/g, '_') : null
+        // avoid using slashes in public_id; use underscores to separate parts
+        const publicId = userFolder ? `stores_${userFolder}_${baseName}` : `pandc_${baseName}`
 
         // Use timestamp and include upload_preset if present (preset is signed in your Cloudinary config)
         const timestamp = Math.floor(Date.now() / 1000)
