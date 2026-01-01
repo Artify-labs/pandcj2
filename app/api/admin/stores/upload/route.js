@@ -38,7 +38,8 @@ export async function POST(req) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET
     if (cloudName && apiKey && apiSecret) {
       try {
-        const fileField = `data:${mimeType};base64,${base64Data}`
+        // Convert base64 buffer to proper Blob for Cloudinary
+        const blob = new Blob([buffer], { type: mimeType })
 
         // Build public_id without slashes (Cloudinary 'display name' may reject slashes).
         // Extract filename without extension - use basename to avoid any path components
@@ -75,7 +76,7 @@ export async function POST(req) {
         const signature = crypto.createHash('sha1').update(toSign + apiSecret).digest('hex')
 
         const form = new FormData()
-        form.append('file', fileField)
+        form.append('file', blob)
         form.append('api_key', apiKey)
         form.append('timestamp', String(timestamp))
         form.append('signature', signature)
