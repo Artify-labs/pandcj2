@@ -5,7 +5,7 @@ import Component from '@/components/ui/text-marque';
 function CategoriesMarquee() {
   return (
     <>
-      <div className='min-h-[140px] grid place-content-center'>
+      <div className='min-h-[200px] grid place-content-center'>
         <Component
           delay={500}
           baseVelocity={-3}
