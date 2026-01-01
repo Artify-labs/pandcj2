@@ -22,12 +22,19 @@ const Newsletter = () => {
                 body: JSON.stringify({ email }),
                 credentials: 'include'
             })
+            
+            if (!res.ok) {
+                const data = await res.json()
+                setStatus({ type: 'error', message: data.error || 'Subscription failed' })
+                return
+            }
+
             const data = await res.json()
-            if (res.ok) {
-                setStatus({ type: 'success', message: data.message || 'Subscribed successfully' })
+            if (data && (data.ok || data.message)) {
+                setStatus({ type: 'success', message: 'Subscribed successfully!' })
                 setEmail('')
             } else {
-                setStatus({ type: 'error', message: data.error || 'Subscription failed' })
+                setStatus({ type: 'error', message: 'Subscription failed' })
             }
         } catch (err) {
             console.error('Newsletter subscription error:', err)

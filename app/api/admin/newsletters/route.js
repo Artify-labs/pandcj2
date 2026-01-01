@@ -26,10 +26,10 @@ export async function POST(req) {
       result = await mongodb.newsletter.subscribe(email)
     }
 
-    return new Response(JSON.stringify(result), { status: 200 })
+    return new Response(JSON.stringify({ ok: true, message: 'Subscribed successfully', result }), { status: 200 })
   } catch (err) {
     console.error('POST /api/admin/newsletters failed:', err)
-    return new Response(JSON.stringify({ error: 'Failed to manage newsletter' }), { status: 500 })
+    return new Response(JSON.stringify({ error: 'Failed to manage newsletter', details: err?.message }), { status: 500 })
   }
 }
 
