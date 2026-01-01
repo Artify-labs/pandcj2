@@ -13,6 +13,12 @@ import {
 } from 'motion/react';
 import { cn } from '@/lib/utils';
 
+// Wrap function to loop values
+const wrap = (min, max, v) => {
+  const rangeSize = max - min;
+  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
+};
+
 const Component = forwardRef(function Component(
   {
     children,
@@ -35,8 +41,8 @@ const Component = forwardRef(function Component(
     clamp: false,
   });
 
-  // Remove wrapping to show full text without scrolling off right side
-  const x = useTransform(baseX, (v) => `${Math.max(-100, v)}%`);
+  // Wrap to continuously loop the text
+  const x = useTransform(baseX, (v) => `${wrap(-100, 0, v)}%`);
 
   const directionFactor = useRef(1);
   const hasStarted = useRef(false);
@@ -72,7 +78,7 @@ const Component = forwardRef(function Component(
         className="flex whitespace-nowrap gap-10 flex-nowrap items-center"
         style={{ x }}
       >
-        {Array.from({ length: 1 }).map((_, i) => (
+        {Array.from({ length: 2 }).map((_, i) => (
           <span
             key={i}
             className={cn(
