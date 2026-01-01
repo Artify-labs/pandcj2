@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast"
 import ConfirmDialog from '@/components/ConfirmDialog'
 import Image from "next/image"
 import Loading from "@/components/Loading"
+import { assets } from '@/assets/assets'
 
 export default function StoreManageProducts() {
 
@@ -70,13 +71,13 @@ export default function StoreManageProducts() {
                             <tr key={product.id} className="border-t border-gray-200 hover:bg-gray-50">
                                 <td className="px-4 py-3">
                                     <div className="flex gap-2 items-center">
-                                        <Image width={40} height={40} className='p-1 shadow rounded cursor-pointer' src={product.images[0]} alt="" />
+                                        <Image width={40} height={40} className='p-1 shadow rounded cursor-pointer' src={product.images && product.images[0] ? product.images[0] : assets.upload_area} alt={product.name} />
                                         {product.name}
                                     </div>
                                 </td>
                                 <td className="px-4 py-3 max-w-md text-slate-600 hidden md:table-cell truncate">{product.description}</td>
-                                <td className="px-4 py-3 hidden md:table-cell">{currency} {product.mrp.toLocaleString()}</td>
-                                <td className="px-4 py-3">{currency} {product.price.toLocaleString()}</td>
+                                <td className="px-4 py-3 hidden md:table-cell">{currency} {(product.mrp || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3">{currency} {(product.price || 0).toLocaleString()}</td>
                                 <td className="px-4 py-3 text-center">
                                     <div className="flex items-center justify-center gap-4">
                                         <button onClick={() => toast.promise(deleteProduct(product.id), { loading: 'Deleting...' })} className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-md">

@@ -62,6 +62,21 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchDashboardData()
+        // subscribe to realtime updates for this store
+        const storeId = 'default-store'
+        let es
+        try {
+            es = new EventSource(`/api/orders/stream?storeId=${encodeURIComponent(storeId)}`)
+            es.addEventListener('summary', (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data)
+                    if (msg && msg.data) {
+                        setDashboardData(prev => ({ ...prev, totalEarnings: msg.data.totalAmount, totalOrders: msg.data.totalOrders }))
+                    }
+                } catch (e) { }
+            })
+        } catch (e) { }
+        return () => { try { if (es) es.close() } catch (e) {} }
     }, [])
 
     if (loading) return <Loading />

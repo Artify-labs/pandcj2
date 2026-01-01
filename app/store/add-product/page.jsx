@@ -8,7 +8,7 @@ export default function StoreAddProduct() {
 
     const categories = ['Earrings', 'Necklace', 'Heavy Necklace', 'Fashionable Earrings', 'Others']
 
-    const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
+    const [images, setImages] = useState({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
     const [productInfo, setProductInfo] = useState({
         name: "",
         description: "",
@@ -31,13 +31,15 @@ export default function StoreAddProduct() {
             // upload images that are selected
             const uploadedUrls = []
             for (const key of Object.keys(images)) {
-                const file = images[key]
+                const item = images[key]
+                const file = item?.file
+                const preview = item?.preview
                 if (!file) continue
-                const reader = new FileReader()
-                const dataUrl = await new Promise((resolve, reject) => {
-                    reader.onload = () => resolve(reader.result)
-                    reader.onerror = reject
-                    reader.readAsDataURL(file)
+                const dataUrl = preview || await new Promise((resolve, reject) => {
+                    const r = new FileReader()
+                    r.onload = () => resolve(r.result)
+                    r.onerror = reject
+                    r.readAsDataURL(file)
                 })
                 const base64 = dataUrl.split(',')[1]
                 const res = await fetch('/api/admin/stores/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: base64, filename: file.name }) })
@@ -84,8 +86,16 @@ export default function StoreAddProduct() {
             <div htmlFor="" className="flex gap-3 mt-4">
                 {Object.keys(images).map((key) => (
                     <label key={key} htmlFor={`images${key}`}>
-                        <Image width={300} height={300} className='h-15 w-auto border border-slate-200 rounded cursor-pointer' src={images[key] ? URL.createObjectURL(images[key]) : assets.upload_area} alt="" />
-                        <input type="file" accept='image/*' id={`images${key}`} onChange={e => setImages({ ...images, [key]: e.target.files[0] })} hidden />
+                        <Image width={300} height={300} className='h-15 w-auto border border-slate-200 rounded cursor-pointer' src={images[key].preview ? images[key].preview : assets.upload_area} alt="" />
+                        <input type="file" accept='image/*' id={`images${key}`} onChange={async e => {
+                            const file = e.target.files[0]
+                            if (!file) return
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                                setImages(prev => ({ ...prev, [key]: { file, preview: reader.result } }))
+                            }
+                            reader.readAsDataURL(file)
+                        }} hidden />
                     </label>
                 ))}
             </div>

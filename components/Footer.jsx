@@ -15,14 +15,13 @@ const Footer = () => {
     )
 
     const linkSections = [
-        // {
-        //     title: "WEBSITE?",
-        //     links: [
-        //         { text: "Home", path: '/', icon: null },
-        //         { text: "Privacy Policy", path: '/', icon: null },
-        //         { text: "Become Plus Member", path: '/pricing', icon: null },
-        //     ]
-        // },
+        {
+            title: "LEGAL",
+            links: [
+                { text: "Privacy Policy", path: '/policy', icon: null },
+                { text: "Terms of Service", path: '/terms', icon: null },
+            ]
+        },
         {
             title: "CONTACT",
             links: [
