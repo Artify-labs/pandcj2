@@ -5,14 +5,14 @@ import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import CategoriesMarquee from './CategoriesMarquee'
 
-const Hero = () => {
+const Hero = ({ initial = null }) => {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
-    const [settings, setSettings] = useState(null)
+    const [settings, setSettings] = useState(initial)
 
     useEffect(() => {
         let mounted = true
-        fetch('/api/admin/banner').then(r => r.json()).then(data => {
+        fetch('/api/admin/banner?ts=' + Date.now()).then(r => r.json()).then(data => {
             if (mounted && data) setSettings(data)
         }).catch(() => {})
         return () => { mounted = false }
