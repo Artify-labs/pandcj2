@@ -28,7 +28,7 @@ const Component = forwardRef(({
     damping: 50,
     stiffness: 400,
   });
-  const velocityFactor = useTransform(smoothVelocity, [0, 1000], [0, 2], {
+  const velocityFactor = useTransform(smoothVelocity, [0, 100], [0, 2], {
     clamp: false,
   });
 
@@ -69,10 +69,10 @@ const Component = forwardRef(({
         className='flex whitespace-nowrap gap-10 flex-nowrap'
         style={{ x }}
       >
-        <span className={cn(`block text-[8vw] text-orange-500`, clasname)}>{children}</span>
-        <span className={cn(`block text-[8vw] text-orange-500`, clasname)}>{children}</span>
-        <span className={cn(`block text-[8vw] text-orange-500`, clasname)}>{children}</span>
-        <span className={cn(`block text-[8vw] text-orange-500`, clasname)}>{children}</span>
+        <span className={cn(`block text-[5vw] sm:text-[4vw] md:text-[3.5vw] lg:text-[6vw] text-orange-500`, clasname)}>{children}</span>
+        <span className={cn(`block text-[5vw] sm:text-[4vw] md:text-[3.5vw] lg:text-[6vw] text-orange-500`, clasname)}>{children}</span>
+        <span className={cn(`block text-[5vw] sm:text-[4vw] md:text-[3.5vw] lg:text-[6vw] text-orange-500`, clasname)}>{children}</span>
+        <span className={cn(`block text-[5vw] sm:text-[4vw] md:text-[3.5vw] lg:text-[6vw] text-orange-500`, clasname)}>{children}</span>
       </motion.div>
     </div>
   );
