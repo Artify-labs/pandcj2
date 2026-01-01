@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 // Removed TypeScript-only types for a JS file; using plain JS props
 const Component = forwardRef(({
   children,
-  baseVelocity = -5,
+  baseVelocity = -3,
   clasname,
   scrollDependent = false,
   delay = 0,
@@ -48,7 +48,7 @@ const Component = forwardRef(({
   useAnimationFrame((t, delta) => {
     if (!hasStarted.current) return;
 
-    let moveBy = directionFactor.current * baseVelocity * (delta / 100);
+    let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
 
     if (scrollDependent) {
       if (velocityFactor.get() < 0) {
