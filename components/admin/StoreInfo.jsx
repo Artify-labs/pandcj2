@@ -5,7 +5,7 @@ import { assets } from "@/assets/assets"
 
 const StoreInfo = ({ store }) => {
     const safeStore = store || {}
-    const logoSrc = safeStore.logo || assets.gs_logo
+    const logoSrc = assets.pandcjewellery
     const name = safeStore.name || 'Unnamed Store'
     const username = safeStore.username || ''
     const status = safeStore.status || 'approved'
@@ -14,7 +14,7 @@ const StoreInfo = ({ store }) => {
     const contact = safeStore.contact || ''
     const email = safeStore.email || ''
     const createdAt = safeStore.createdAt ? new Date(safeStore.createdAt).toLocaleDateString() : ''
-    const user = safeStore.user || { name: 'Store Owner', email: '', image: assets.gs_logo }
+    const user = safeStore.user || { name: 'Seller', email: '', image: assets.pandcjewellery }
 
     return (
         <div className="flex-1 space-y-2 text-sm">
