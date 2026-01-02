@@ -255,7 +255,8 @@ const OrderSummary = ({ totalPrice, items }) => {
                 })
                 
                 const data = await res.json()
-                console.log('[OrderSummary] 📨 API Response:', data)
+                console.log('[OrderSummary] 📨 API Response Status:', res.status)
+                console.log('[OrderSummary] 📨 API Response Full:', JSON.stringify(data))
                 
                 if (res.ok && data.shippingCharge !== undefined && data.shippingCharge !== null) {
                     const charge = Number(data.shippingCharge)
@@ -264,8 +265,9 @@ const OrderSummary = ({ totalPrice, items }) => {
                     console.log('[OrderSummary] ✅ Shipping charge set to: ₹' + charge)
                 } else {
                     // API returned an error
-                    console.error('[OrderSummary] ❌ API error:', data.error || 'No shipping charge returned')
-                    toast.error(data.error || 'Could not calculate shipping for this location')
+                    const errorMsg = data.error || data.message || 'Could not calculate shipping for this location'
+                    console.error('[OrderSummary] ❌ API error:', errorMsg)
+                    toast.error(errorMsg)
                     setShippingCharge(0)
                 }
             } catch (err) {

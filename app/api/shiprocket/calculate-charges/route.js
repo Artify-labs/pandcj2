@@ -127,8 +127,12 @@ export async function POST(req) {
       if (ratesData.status_code === 1 && Array.isArray(ratesData.data) && ratesData.data.length > 0) {
         // Get the cheapest courier option
         const bestRate = ratesData.data[0]
+        console.log('[Shiprocket] 📊 Best rate object:', JSON.stringify(bestRate))
+        
         const shippingCharge = Number(bestRate.rate || bestRate.rating || 0)
         const estimatedDays = Number(bestRate.estimated_delivery_days || 3)
+        
+        console.log('[Shiprocket] 💰 Extracted charge:', shippingCharge, 'Days:', estimatedDays)
 
         if (!shippingCharge || shippingCharge === 0) {
           console.error('[Shiprocket] ❌ Invalid rate received:', bestRate)
