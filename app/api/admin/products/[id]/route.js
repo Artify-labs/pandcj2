@@ -7,23 +7,15 @@ export async function PATCH(req, { params }) {
     if (!id) return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 })
 
     const body = await req.json()
-    // Sync stock field with inStock boolean
     if (body.stock) {
       body.inStock = body.stock !== 'out_of_stock'
     }
     
-    console.log('PATCH /api/admin/products updating id:', id, 'with body:', body)
-    const product = await mongodb.product.update(id, body)
-    
-    if (!product) {
-      console.error('Product not found for id:', id)
-      return new Response(JSON.stringify({ error: 'Product not found' }), { status: 404 })
-    }
-
-    return new Response(JSON.stringify(product), { status: 200 })
+    const result = await mongodb.product.update(id, body)
+    return new Response(JSON.stringify(result), { status: 200 })
   } catch (err) {
     console.error('PATCH /api/admin/products/[id] failed:', err)
-    return new Response(JSON.stringify({ error: 'Failed to update product', details: err.message }), { status: 500 })
+    return new Response(JSON.stringify({ error: 'Failed to update product' }), { status: 500 })
   }
 }
 
@@ -33,28 +25,15 @@ export async function PUT(req, { params }) {
     if (!id) return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 })
 
     const body = await req.json()
-    // Sync stock field with inStock boolean
     if (body.stock) {
       body.inStock = body.stock !== 'out_of_stock'
     }
     
-    console.log('PUT /api/admin/products updating id:', id, 'with body:', body)
-    
-    // First check if product exists
-    const exists = await mongodb.product.findById(id)
-    console.log('Product exists check:', exists ? 'YES' : 'NO')
-    
-    const product = await mongodb.product.update(id, body)
-    
-    if (!product) {
-      console.error('Product not found for id:', id)
-      return new Response(JSON.stringify({ error: 'Product not found' }), { status: 404 })
-    }
-
-    return new Response(JSON.stringify(product), { status: 200 })
+    const result = await mongodb.product.update(id, body)
+    return new Response(JSON.stringify(result), { status: 200 })
   } catch (err) {
     console.error('PUT /api/admin/products/[id] failed:', err)
-    return new Response(JSON.stringify({ error: 'Failed to update product', details: err.message }), { status: 500 })
+    return new Response(JSON.stringify({ error: 'Failed to update product' }), { status: 500 })
   }
 }
 
