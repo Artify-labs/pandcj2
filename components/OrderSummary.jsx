@@ -223,30 +223,45 @@ const OrderSummary = ({ totalPrice, items }) => {
         const fetchShippingCharge = async () => {
             setLoadingShipping(true)
             try {
+                const requestBody = {
+                    items: items.map(it => {
+                        const product = it.product || it
+                        return {
+                            productId: product?.id,
+                            quantity: Number(it.quantity || 1),
+                            weight: 0.5
+                        }
+                    }),
+                    deliveryAddress: selectedAddress,
+                    coupon: coupon || null
+                }
+                
+                console.log('[OrderSummary] 📦 Fetching shipping charge for PIN:', selectedAddress.zip)
+                
                 const res = await fetch('/api/shiprocket/calculate-charges', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: items.map(it => {
-                            const product = it.product || it
-                            return {
-                                productId: product?.id,
-                                quantity: Number(it.quantity || 1),
-                                weight: 0.5
-                            }
-                        }),
-                        deliveryAddress: selectedAddress,
-                        coupon: coupon || null
-                    })
+                    body: JSON.stringify(requestBody)
                 })
+                
                 const data = await res.json()
-                if (data.shippingCharge) {
-                    setShippingCharge(data.shippingCharge)
+                console.log('[OrderSummary] 📨 API Response:', data)
+                
+                if (res.ok && data.shippingCharge !== undefined && data.shippingCharge !== null) {
+                    const charge = Number(data.shippingCharge)
+                    setShippingCharge(charge)
                     setEstimatedDays(data.estimatedDays || null)
+                    console.log('[OrderSummary] ✅ Shipping charge set to: ₹' + charge)
+                } else {
+                    // API returned an error
+                    console.error('[OrderSummary] ❌ API error:', data.error || 'No shipping charge returned')
+                    toast.error(data.error || 'Could not calculate shipping for this location')
+                    setShippingCharge(0)
                 }
             } catch (err) {
-                console.error('Failed to fetch shipping charge:', err)
-                setShippingCharge(100) // Default fallback
+                console.error('[OrderSummary] ❌ Network error:', err)
+                toast.error('Failed to fetch shipping charges: ' + err.message)
+                setShippingCharge(0)
             } finally {
                 setLoadingShipping(false)
             }

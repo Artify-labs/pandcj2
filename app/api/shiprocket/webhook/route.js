@@ -11,7 +11,7 @@
  * - shipment.failed
  */
 
-import { connectToDatabase } from '@/lib/mongodb'
+import { mongodb } from '@/lib/mongodb'
 
 // Store SSE clients for real-time broadcast
 const sseClients = new Map()
@@ -35,10 +35,6 @@ export async function POST(request) {
                 message: 'Invalid webhook payload'
             }, { status: 400 })
         }
-
-        // Connect to database
-        const { db } = await connectToDatabase()
-        const ordersCollection = db.collection('orders')
 
         // Extract data from webhook
         const {
@@ -69,12 +65,10 @@ export async function POST(request) {
 
         const mappedStatus = statusMap[status] || status
 
-        // Find order by shiprocket_order_id
-        const order = await ordersCollection.findOne({
-            shiprocket_order_id: order_id.toString()
-        })
-
-        if (!order) {
+        // Find order by shiprocket_order_id using mongodb.order API
+        const order = await mongodb.order.findMany({ shiprocket_order_id: order_id.toString() }, 1)
+        
+        if (!order || order.length === 0) {
             console.log('[Shiprocket Webhook] Order not found:', order_id)
             return Response.json({
                 success: false,
@@ -82,11 +76,13 @@ export async function POST(request) {
             }, { status: 404 })
         }
 
-        // Update order with Shiprocket status
+        const foundOrder = order[0]
+
+        // Build update data
         const updateData = {
             shiprocket_status: mappedStatus,
-            shiprocket_awb: awb_code || order.shiprocket_awb,
-            shiprocket_courier: courier_name || order.shiprocket_courier,
+            shiprocket_awb: awb_code || foundOrder.shiprocket_awb,
+            shiprocket_courier: courier_name || foundOrder.shiprocket_courier,
             shiprocket_tracking_url: tracking_url,
             shiprocket_last_update: new Date(),
         }
@@ -105,12 +101,8 @@ export async function POST(request) {
             updateData.status = 'shipped'
         }
 
-        // Perform update
-        const result = await ordersCollection.findOneAndUpdate(
-            { shiprocket_order_id: order_id.toString() },
-            { $set: updateData },
-            { returnDocument: 'after' }
-        )
+        // Perform update using mongodb.order API
+        const result = await mongodb.order.update(foundOrder.id, updateData)
 
         console.log('[Shiprocket Webhook] Order updated:', {
             orderId: order_id,
@@ -119,9 +111,9 @@ export async function POST(request) {
         })
 
         // Broadcast to store dashboard (SSE)
-        broadcastToStore(order.storeId, {
+        broadcastToStore(foundOrder.storeId, {
             event: 'shipment_status_update',
-            orderId: order._id.toString(),
+            orderId: foundOrder.id,
             shipmentId: shipment_id,
             awb: awb_code,
             status: mappedStatus,
@@ -132,13 +124,13 @@ export async function POST(request) {
         })
 
         // Send notification to customer (optional)
-        await notifyCustomer(order, mappedStatus, awb_code, tracking_url)
+        await notifyCustomer(foundOrder, mappedStatus, awb_code, tracking_url)
 
         return Response.json({
             success: true,
             message: 'Webhook processed successfully',
             updatedOrder: {
-                id: result.value._id,
+                id: foundOrder.id,
                 status: mappedStatus,
                 awb: awb_code
             }
