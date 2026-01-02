@@ -13,8 +13,9 @@ export default function StoreOrders({ params }) {
     useEffect(() => {
         const fetchStoreOrders = async () => {
             const storeId = 'default-store'
+            const userId = 'default-user' // Replace with actual userId from auth
             try {
-                const res = await fetch(`/api/orders?storeId=${storeId}`)
+                const res = await fetch(`/api/store/orders?storeId=${storeId}&userId=${userId}`)
                 if (!res.ok) {
                     setOrders([])
                     setLoading(false)
@@ -23,8 +24,11 @@ export default function StoreOrders({ params }) {
                 const data = await res.json()
                 // filter out cancelled orders
                 const visible = (data || []).filter(o => !(o.status && String(o.status).toUpperCase().startsWith('CANCEL')))
-                setOrders(visible)
+                // Remove duplicates by checking order ID
+                const uniqueOrders = Array.from(new Map(visible.map(o => [o.id, o])).values())
+                setOrders(uniqueOrders)
             } catch (err) {
+                console.error('Failed to fetch orders:', err)
                 setOrders([])
             } finally {
                 setLoading(false)

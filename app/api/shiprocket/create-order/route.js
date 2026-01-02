@@ -105,6 +105,12 @@ export async function POST(req) {
     const SHIPROCKET_BASE_URL = process.env.SHIPROCKET_BASE_URL || 'https://apiv2.shiprocket.in'
     const SHIPROCKET_PICKUP_LOCATION_ID = process.env.SHIPROCKET_PICKUP_LOCATION_ID || '1'
 
+    // Extract first and last name from full name
+    const fullName = deliveryAddress.name || userName || 'Customer'
+    const nameParts = fullName.trim().split(/\s+/)
+    const firstName = nameParts[0] || 'Customer'
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Order'
+
     // Prepare order data for Shiprocket
     const shiprocketOrder = {
       order_id: String(orderId).slice(0, 50),
@@ -112,7 +118,8 @@ export async function POST(req) {
       pickup_location_id: Number(SHIPROCKET_PICKUP_LOCATION_ID),
       
       // Billing Information
-      billing_customer_name: sanitizeString(deliveryAddress.name || userName || 'Customer'),
+      billing_customer_name: sanitizeString(firstName),
+      billing_last_name: sanitizeString(lastName),
       billing_email: sanitizeEmail(userEmail || deliveryAddress.email),
       billing_phone: sanitizePhone(deliveryAddress.phone),
       billing_address: sanitizeString(deliveryAddress.line1 || deliveryAddress.address || 'Address'),
@@ -124,7 +131,8 @@ export async function POST(req) {
       
       // Shipping Information (same as billing for India)
       shipping_is_billing: true,
-      shipping_customer_name: sanitizeString(deliveryAddress.name || userName || 'Customer'),
+      shipping_customer_name: sanitizeString(firstName),
+      shipping_last_name: sanitizeString(lastName),
       shipping_email: sanitizeEmail(userEmail || deliveryAddress.email),
       shipping_phone: sanitizePhone(deliveryAddress.phone),
       shipping_address: sanitizeString(deliveryAddress.line1 || deliveryAddress.address || 'Address'),
