@@ -32,7 +32,7 @@ const ProductCard = ({ product }) => {
             <Link href={`/product/${product.id}`} className='block p-2 sm:p-0 rounded-md hover:shadow-sm transition'>
                 <div className='bg-[#F5F5F5] h-44 sm:h-68 sm:w-60 rounded-lg flex items-center justify-center overflow-hidden'>
                     {product?.images && product.images.length > 0 ? (
-                        <Image width={500} height={500} className='object-contain w-full h-full group-hover:scale-105 transition duration-300' src={product.images[0]} alt={product.name || ''} />
+                        <Image width={500} height={500} className='object-cover w-full h-full' src={product.images[0]} alt={product.name || ''} />
                     ) : (
                         <div className='w-full h-full flex items-center justify-center text-slate-400'>No Image</div>
                     )}

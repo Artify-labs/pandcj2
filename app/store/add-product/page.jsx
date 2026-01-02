@@ -93,7 +93,7 @@ export default function StoreAddProduct() {
                     const image = images[key]
                     return (
                     <label key={key} htmlFor={`images${key}`}>
-                        <Image width={300} height={300} className='h-15 w-auto border border-slate-200 rounded cursor-pointer' src={image?.preview ? image.preview : assets.upload_area} alt="" />
+                        <Image width={150} height={150} className='h-40 w-40 border border-slate-200 rounded cursor-pointer object-cover' src={image?.preview ? image.preview : assets.upload_area} alt="" />
                         <input type="file" accept='image/*' id={`images${key}`} onChange={async e => {
                             const file = e.target.files[0]
                             if (!file) return

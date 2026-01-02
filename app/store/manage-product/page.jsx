@@ -62,7 +62,7 @@ export default function StoreManageProducts() {
                             <tr key={product.id} className="border-t border-gray-200 hover:bg-gray-50">
                                 <td className="px-4 py-3">
                                     <div className="flex gap-2 items-center">
-                                        <Image width={40} height={40} className='p-1 shadow rounded cursor-pointer' src={product.images && product.images[0] ? product.images[0] : assets.upload_area} alt={product.name} />
+                                        <Image width={50} height={50} className='rounded object-cover' src={product.images && product.images[0] ? product.images[0] : assets.upload_area} alt={product.name} />
                                         {product.name}
                                     </div>
                                 </td>
