@@ -1,12 +1,16 @@
 import mongodb from '@/lib/mongodb'
 
-// Update product
+// Update product (PATCH and PUT)
 export async function PATCH(req, { params }) {
   try {
     const { id } = await params || {}
     if (!id) return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 })
 
     const body = await req.json()
+    // Sync stock field with inStock boolean
+    if (body.stock) {
+      body.inStock = body.stock !== 'out_of_stock'
+    }
     const product = await mongodb.product.update(id, body)
     
     if (!product) {
@@ -20,18 +24,46 @@ export async function PATCH(req, { params }) {
   }
 }
 
+export async function PUT(req, { params }) {
+  try {
+    const { id } = await params || {}
+    if (!id) return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 })
+
+    const body = await req.json()
+    // Sync stock field with inStock boolean
+    if (body.stock) {
+      body.inStock = body.stock !== 'out_of_stock'
+    }
+    const product = await mongodb.product.update(id, body)
+    
+    if (!product) {
+      return new Response(JSON.stringify({ error: 'Product not found' }), { status: 404 })
+    }
+
+    return new Response(JSON.stringify(product), { status: 200 })
+  } catch (err) {
+    console.error('PUT /api/admin/products/[id] failed:', err)
+    return new Response(JSON.stringify({ error: 'Failed to update product' }), { status: 500 })
+  }
+}
+
 // Delete product
 export async function DELETE(req, { params }) {
   try {
     const { id } = await params || {}
     if (!id) return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 })
 
+    const product = await mongodb.product.findById(id)
+    if (!product) {
+      return new Response(JSON.stringify({ error: 'Product not found' }), { status: 404 })
+    }
+
     const success = await mongodb.product.delete(id)
     if (!success) {
       return new Response(JSON.stringify({ error: 'Product not found' }), { status: 404 })
     }
 
-    return new Response(JSON.stringify({ success }), { status: 200 })
+    return new Response(JSON.stringify({ id: product.id }), { status: 200 })
   } catch (err) {
     console.error('DELETE /api/admin/products/[id] failed:', err)
     return new Response(JSON.stringify({ error: 'Failed to delete product' }), { status: 500 })

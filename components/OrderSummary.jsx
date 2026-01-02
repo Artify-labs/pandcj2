@@ -53,6 +53,17 @@ const OrderSummary = ({ totalPrice, items }) => {
             return
         }
 
+        // Check if any items are out of stock
+        const outOfStockItems = items.filter(it => {
+            const product = it.product || it
+            return product?.stock === 'out_of_stock'
+        })
+
+        if (outOfStockItems.length > 0) {
+            toast.error('Some items in your cart are out of stock. Please remove them before placing order.')
+            return
+        }
+
         try {
             const payload = {
                 items: items.map(it => {

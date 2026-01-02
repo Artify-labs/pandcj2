@@ -4,7 +4,7 @@ import mongodb from '@/lib/mongodb'
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { name, description, mrp, price, images, category, storeId } = body
+    const { name, description, mrp, price, images, category, stock, storeId } = body
 
     if (!name || !description || !images || !Array.isArray(images) || images.length === 0) {
       return new Response(JSON.stringify({ error: 'name, description, and at least one image are required' }), { status: 400 })
@@ -21,7 +21,8 @@ export async function POST(req) {
       price: Number(price) || 0,
       images,
       category: category || 'Others',
-      inStock: true,
+      stock: stock || 'in_stock',
+      inStock: stock !== 'out_of_stock',
       storeId,
     })
 

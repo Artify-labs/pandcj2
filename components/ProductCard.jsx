@@ -37,7 +37,7 @@ const ProductCard = ({ product }) => {
                         <div className='w-full h-full flex items-center justify-center text-slate-400'>No Image</div>
                     )}
                 </div>
-                {product.inStock === false && (
+                {(product.inStock === false || product.stock === 'out_of_stock') && (
                     <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
                         <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-md font-medium">Out of stock</span>
                     </div>

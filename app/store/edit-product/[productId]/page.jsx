@@ -1,11 +1,13 @@
 'use client'
 import { assets } from "@/assets/assets"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
+import { useParams } from "next/navigation"
 
-export default function StoreAddProduct() {
+export default function StoreEditProduct() {
 
+    const { productId } = useParams()
     const categories = ['Earrings', 'Necklace', 'Heavy Necklace', 'Fashionable Earrings', 'Others']
 
     const [images, setImages] = useState({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
@@ -15,10 +17,47 @@ export default function StoreAddProduct() {
         mrp: 0,
         price: 0,
         category: "",
-        stock: "in_stock"
+        stock: "in_stock",
+        images: []
     })
     const [loading, setLoading] = useState(false)
+    const [initialLoading, setInitialLoading] = useState(true)
 
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const res = await fetch(`/api/products/${productId}`)
+                if (!res.ok) throw new Error('Failed to fetch product')
+                const product = await res.json()
+                setProductInfo({
+                    name: product.name || "",
+                    description: product.description || "",
+                    mrp: product.mrp || 0,
+                    price: product.price || 0,
+                    category: product.category || "",
+                    stock: product.stock || "in_stock",
+                    images: product.images || []
+                })
+                // Set preview images
+                if (product.images && product.images.length > 0) {
+                    const newImages = { ...images }
+                    product.images.forEach((img, idx) => {
+                        const key = String(idx + 1)
+                        if (newImages[key]) {
+                            newImages[key].preview = img
+                        }
+                    })
+                    setImages(newImages)
+                }
+            } catch (e) {
+                console.error(e)
+                toast.error('Could not load product')
+            } finally {
+                setInitialLoading(false)
+            }
+        }
+        if (productId) fetchProduct()
+    }, [productId])
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
@@ -29,13 +68,18 @@ export default function StoreAddProduct() {
         try {
             setLoading(true)
 
-            // upload images that are selected
-            const uploadedUrls = []
+            // upload new images that are selected
+            const uploadedUrls = [...productInfo.images]
             for (const key of Object.keys(images)) {
                 const item = images[key]
                 const file = item?.file
                 const preview = item?.preview
+                
+                // Skip if no new file selected and preview exists (existing image)
+                if (!file && preview && uploadedUrls.includes(preview)) continue
+                
                 if (!file) continue
+
                 const dataUrl = preview || await new Promise((resolve, reject) => {
                     const r = new FileReader()
                     r.onload = () => resolve(r.result)
@@ -48,13 +92,15 @@ export default function StoreAddProduct() {
                 if (!res.ok) {
                     throw new Error(`Upload failed: ${body?.error?.message || 'Unknown error'}`)
                 }
-                if (body?.url) uploadedUrls.push(body.url)
-            }
-
-            if (uploadedUrls.length === 0) {
-                toast.error('Please upload at least one image')
-                setLoading(false)
-                return
+                if (body?.url) {
+                    // Replace old image or add new one
+                    const idx = parseInt(key) - 1
+                    if (uploadedUrls[idx]) {
+                        uploadedUrls[idx] = body.url
+                    } else {
+                        uploadedUrls.push(body.url)
+                    }
+                }
             }
 
             const payload = {
@@ -68,24 +114,24 @@ export default function StoreAddProduct() {
                 storeId: 'default-store'
             }
 
-            const res = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            if (!res.ok) throw new Error('Failed to create product')
-            const created = await res.json()
-            toast.success('Product added')
-            // reset form
-            setProductInfo({ name: '', description: '', mrp: 0, price: 0, category: '', stock: 'in_stock' })
-            setImages({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
+            const res = await fetch(`/api/admin/products/${productId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            if (!res.ok) throw new Error('Failed to update product')
+            const updated = await res.json()
+            toast.success('Product updated')
+            // redirect after success
+            setTimeout(() => window.location.href = '/store/manage-product', 1000)
         } catch (err) {
             console.error(err)
-            toast.error('Could not add product')
+            toast.error('Could not update product')
         } finally { setLoading(false) }
         
     }
 
+    if (initialLoading) return <div className="text-slate-500">Loading...</div>
 
     return (
-        <form onSubmit={e => toast.promise(onSubmitHandler(e), { loading: "Adding Product..." })} className="text-slate-500 mb-28">
-            <h1 className="text-2xl">Add New <span className="text-slate-800 font-medium">Products</span></h1>
+        <form onSubmit={e => toast.promise(onSubmitHandler(e), { loading: "Updating Product..." })} className="text-slate-500 mb-28">
+            <h1 className="text-2xl">Edit <span className="text-slate-800 font-medium">Product</span></h1>
             <p className="mt-7">Product Images</p>
 
             <div htmlFor="" className="flex gap-3 mt-4">
@@ -122,11 +168,11 @@ export default function StoreAddProduct() {
             <div className="flex gap-5">
                 <label htmlFor="" className="flex flex-col gap-2 ">
                     Actual Price (₹)
-                    <input type="number" name="mrp" onChange={onChangeHandler} value={productInfo.mrp} placeholder="0" rows={5} className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
+                    <input type="number" name="mrp" onChange={onChangeHandler} value={productInfo.mrp} placeholder="0" className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded" required />
                 </label>
                 <label htmlFor="" className="flex flex-col gap-2 ">
                     Offer Price (₹)
-                    <input type="number" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0" rows={5} className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
+                    <input type="number" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0" className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded" required />
                 </label>
             </div>
 
@@ -147,7 +193,7 @@ export default function StoreAddProduct() {
 
             <br />
 
-            <button disabled={loading} className="bg-slate-800 text-white px-6 mt-7 py-2 hover:bg-slate-900 rounded transition">Add Product</button>
+            <button disabled={loading} className="bg-slate-800 text-white px-6 mt-7 py-2 hover:bg-slate-900 rounded transition">Update Product</button>
         </form>
     )
 }

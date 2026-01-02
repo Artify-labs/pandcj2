@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
-import ConfirmDialog from '@/components/ConfirmDialog'
 import Image from "next/image"
 import Loading from "@/components/Loading"
 import { assets } from '@/assets/assets'
@@ -29,14 +28,6 @@ export default function StoreManageProducts() {
 
     // stock toggle removed per request
 
-    const [confirmOpen, setConfirmOpen] = useState(false)
-    const [pendingDelete, setPendingDelete] = useState(null)
-
-    const confirmDelete = (productId) => {
-        setPendingDelete(productId)
-        setConfirmOpen(true)
-    }
-
     const deleteProduct = async (productId) => {
         try {
             const res = await fetch(`/api/admin/products/${productId}`, { method: 'DELETE' })
@@ -45,7 +36,6 @@ export default function StoreManageProducts() {
             setProducts(prev => prev.filter(p => p.id !== data.id))
             toast.success('Deleted')
         } catch (e) { console.error(e); toast.error('Could not delete product') }
-        finally { setConfirmOpen(false); setPendingDelete(null) }
     }
 
     if (loading) return <Loading />
@@ -60,12 +50,13 @@ export default function StoreManageProducts() {
                         <th className="px-4 py-3 hidden md:table-cell">Description</th>
                         <th className="px-4 py-3 hidden md:table-cell">MRP</th>
                         <th className="px-4 py-3">Price</th>
+                        <th className="px-4 py-3">Stock</th>
                         <th className="px-4 py-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="text-slate-700">
                     {products.length === 0 ? (
-                        <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>No products available</td></tr>
+                                <td className="px-4 py-3">No products available</td>
                     ) : (
                         products.map((product) => (
                             <tr key={product.id} className="border-t border-gray-200 hover:bg-gray-50">
@@ -78,14 +69,18 @@ export default function StoreManageProducts() {
                                 <td className="px-4 py-3 max-w-md text-slate-600 hidden md:table-cell truncate">{product.description}</td>
                                 <td className="px-4 py-3 hidden md:table-cell">{currency} {(product.mrp || 0).toLocaleString()}</td>
                                 <td className="px-4 py-3">{currency} {(product.price || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${product.stock === 'in_stock' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        {product.stock === 'in_stock' ? 'In Stock' : 'Out of Stock'}
+                                    </span>
+                                </td>
                                 <td className="px-4 py-3 text-center">
-                                    <div className="flex items-center justify-center gap-4">
-                                        <button onClick={() => toast.promise(deleteProduct(product.id), { loading: 'Deleting...' })} className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-md">
-                                            {/* keep the old immediate delete for compatibility, but also support confirm flow */}
-                                            Delete
+                                    <div className="flex items-center justify-center gap-2">
+                                        <button onClick={() => window.location.href = `/store/edit-product/${product.id}`} className="text-blue-500 hover:bg-blue-50 px-3 py-1 rounded-md">
+                                            Edit
                                         </button>
-                                        <button onClick={() => confirmDelete(product.id)} className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-md">
-                                            Delete (confirm)
+                                        <button onClick={() => toast.promise(deleteProduct(product.id), { loading: 'Deleting...' })} className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-md">
+                                            Delete
                                         </button>
                                     </div>
                                 </td>
@@ -94,15 +89,6 @@ export default function StoreManageProducts() {
                     )}
                 </tbody>
             </table>
-            <ConfirmDialog
-                open={confirmOpen}
-                title="Delete product"
-                message="Delete this product? This cannot be undone."
-                confirmText="Delete"
-                cancelText="Keep"
-                onClose={() => setConfirmOpen(false)}
-                onConfirm={() => deleteProduct(pendingDelete)}
-            />
         </>
     )
 }
