@@ -25,9 +25,16 @@ const AddressModal = ({ setShowAddressModal, initial = {}, onSave = null }) => {
     }, [initial])
 
     const handleAddressChange = (e) => {
+        let value = e.target.value
+        
+        // Strip leading 0 from phone number
+        if (e.target.name === 'phone') {
+            value = value.replace(/^0+/, '')
+        }
+        
         setAddress({
             ...address,
-            [e.target.name]: e.target.value
+            [e.target.name]: value
         })
     }
 

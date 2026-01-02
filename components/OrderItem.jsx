@@ -7,22 +7,23 @@ import { useState } from "react";
 import RatingModal from "./RatingModal";
 import { useRouter } from 'next/navigation'
 
-const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = null }) => {
+const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = null, onView = null }) => {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
     const [ratingModal, setRatingModal] = useState(null);
+    const isCancelled = order.status && String(order.status).toUpperCase().startsWith('CANCEL');
 
     const { ratings } = useSelector(state => state.rating);
     const router = useRouter()
 
     return (
         <>
-            <tr className="text-sm">
+            <tr className={`text-sm ${isCancelled ? 'opacity-60 bg-red-50' : ''}`}>
                 <td className="text-left">
                     <div className="flex flex-col gap-6">
                         {(order?.orderItems || []).map((item, index) => (
                             <div key={index} className="flex items-center gap-4">
-                                <div className="w-20 aspect-square bg-slate-100 flex items-center justify-center rounded-md">
+                                <div className={`w-20 aspect-square bg-slate-100 flex items-center justify-center rounded-md ${isCancelled ? 'opacity-50' : ''}`}>
                                     <Image
                                         className="h-14 w-auto"
                                         src={item.product.images[0]}
@@ -32,13 +33,15 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                                     />
                                 </div>
                                 <div className="flex flex-col justify-center text-sm">
-                                    <p className="font-medium text-slate-600 text-base">{item.product.name}</p>
-                                    <p>{currency}{item.price} Qty : {item.quantity} </p>
+                                    <p className={`font-medium text-base ${isCancelled ? 'line-through text-red-600' : 'text-slate-600'}`}>
+                                        {item.product.name}
+                                    </p>
+                                    <p className={isCancelled ? 'line-through text-red-600' : ''}>{currency}{item.price} Qty : {item.quantity}</p>
                                     <p className="mb-1">{new Date(order.createdAt).toDateString()}</p>
                                     <div>
                                         {ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId)
                                             ? <Rating value={ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId).rating} />
-                                            : <button onClick={() => setRatingModal({ orderId: order.id, productId: item.product.id })} className={`text-yellow-500 hover:bg-yellow-50 transition ${order.status !== "DELIVERED" && 'hidden'}`}>Rate Product</button>
+                                            : <button onClick={() => setRatingModal({ orderId: order.id, productId: item.product.id })} className={`text-yellow-500 hover:bg-yellow-50 transition ${(order.status !== "DELIVERED" || isCancelled) && 'hidden'}`}>Rate Product</button>
                                         }</div>
                                     {ratingModal && <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />}
                                 </div>
@@ -47,9 +50,11 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                     </div>
                 </td>
 
-                <td className="text-center max-md:hidden">{currency}{order.total}</td>
+                <td className={`text-center max-md:hidden ${isCancelled ? 'line-through text-red-600' : ''}`}>
+                    {currency}{order.total}
+                </td>
 
-                <td className="text-left max-md:hidden">
+                <td className={`text-left max-md:hidden ${isCancelled ? 'text-red-600' : ''}`}>
                     <p>{order.address.name}, {order.address.street},</p>
                     <p>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country},</p>
                     <p>{order.address?.phone || 'N/A'}</p>
@@ -80,25 +85,25 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                     ) : (
                         <>
                             <div
-                                className={`flex items-center justify-center gap-1 rounded-full p-1 ${order.status === 'PROCESSING'
-                                    ? 'text-yellow-500 bg-yellow-100'
-                                    : order.status === 'DELIVERED'
-                                        ? 'text-yellow-500 bg-yellow-100'
-                                        : 'text-slate-500 bg-slate-100'
-                                    }`}
+                                className={`flex items-center justify-center gap-1 rounded-full p-1 ${
+                                    isCancelled ? 'text-white bg-red-600' :
+                                    order.status === 'PROCESSING' ? 'text-yellow-500 bg-yellow-100' :
+                                    order.status === 'DELIVERED' ? 'text-green-500 bg-green-100' :
+                                    'text-slate-500 bg-slate-100'
+                                }`}
                             >
                                 <DotIcon size={10} className="scale-250" />
                                 {String(order.status).split('_').join(' ').toLowerCase()}
                             </div>
                             <div className="flex items-center gap-2 mt-2">
-                                {onCancel && (order.status === 'ORDER_PLACED' || order.status === 'PROCESSING') && (
-                                    <button onClick={() => onCancel(order.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded">Cancel</button>
+                                {onCancel && (order.status === 'ORDER_PLACED' || order.status === 'PROCESSING') && !isCancelled && (
+                                    <button onClick={() => onCancel(order.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded text-xs">Cancel</button>
                                 )}
                                 {editable && (
                                     onView ? (
-                                        <button onClick={() => onView(order)} className="text-slate-700 bg-slate-100 px-3 py-1 rounded">View</button>
+                                        <button onClick={() => onView(order)} className="text-slate-700 bg-slate-100 px-3 py-1 rounded text-xs">View</button>
                                     ) : (
-                                        <button onClick={() => router.push(`/store/orders/${order.id}`)} className="text-slate-700 bg-slate-100 px-3 py-1 rounded">View</button>
+                                        <button onClick={() => router.push(`/store/orders/${order.id}`)} className="text-slate-700 bg-slate-100 px-3 py-1 rounded text-xs">View</button>
                                     )
                                 )}
                             </div>
@@ -107,34 +112,38 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                 </td>
             </tr>
             {/* Mobile */}
-            <tr className="md:hidden">
+            <tr className={`md:hidden ${isCancelled ? 'opacity-60 bg-red-50' : ''}`}>
                 <td colSpan={5}>
-                    <p>{order.address.name}, {order.address.street}</p>
-                    <p>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country}</p>
+                    <p className={isCancelled ? 'line-through text-red-600' : ''}>{order.address.name}, {order.address.street}</p>
+                    <p className={isCancelled ? 'text-red-600' : ''}>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country}</p>
                     <p>{order.address?.phone || 'N/A'}</p>
                     <p>Email: {order.address?.email || 'N/A'}</p>
                     <br />
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-wrap gap-2">
                         {editable && typeof onStatusChange === 'function' ? (
                             <select
                                 value={order.status}
                                 onChange={(e) => onStatusChange(order.id, e.target.value)}
-                                className="px-3 py-1 rounded border mx-auto"
+                                className="px-3 py-1 rounded border mx-auto text-xs"
                             >
                                 <option value="ORDER_PLACED">Ordered</option>
                                 <option value="PROCESSING">Processing</option>
-                                    <option value="CANCELLED">Cancelled</option>
+                                <option value="CANCELLED">Cancelled</option>
                                 <option value="SHIPPED">Shipped</option>
                                 <option value="DELIVERED">Delivered</option>
                             </select>
                         ) : (
                             <div className="mx-auto flex items-center gap-2">
-                                <span className='text-center px-3 py-1.5 rounded bg-yellow-100 text-yellow-700' >{String(order.status).replace(/_/g, ' ').toLowerCase()}</span>
-                                {onCancel && (order.status === 'ORDER_PLACED' || order.status === 'PROCESSING') && (
-                                    <button onClick={() => onCancel(order.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded">Cancel</button>
+                                <span className={`text-center px-3 py-1.5 rounded text-xs font-medium ${
+                                    isCancelled ? 'bg-red-600 text-white' : 'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                    {String(order.status).replace(/_/g, ' ').toLowerCase()}
+                                </span>
+                                {onCancel && (order.status === 'ORDER_PLACED' || order.status === 'PROCESSING') && !isCancelled && (
+                                    <button onClick={() => onCancel(order.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded text-xs">Cancel</button>
                                 )}
                                 {editable && (
-                                    <button onClick={() => { if (typeof window !== 'undefined') window.location.href = `/store/orders/${order.id}` }} className="text-slate-700 bg-slate-100 px-3 py-1 rounded">View</button>
+                                    <button onClick={() => { if (typeof window !== 'undefined') window.location.href = `/store/orders/${order.id}` }} className="text-slate-700 bg-slate-100 px-3 py-1 rounded text-xs">View</button>
                                 )}
                             </div>
                         )}

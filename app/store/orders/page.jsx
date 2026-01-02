@@ -13,20 +13,25 @@ export default function StoreOrders({ params }) {
     useEffect(() => {
         const fetchStoreOrders = async () => {
             const storeId = 'default-store'
-            const userId = 'default-user' // Replace with actual userId from auth
             try {
-                const res = await fetch(`/api/store/orders?storeId=${storeId}&userId=${userId}`)
+                const res = await fetch(`/api/orders?storeId=${storeId}`)
                 if (!res.ok) {
                     setOrders([])
                     setLoading(false)
                     return
                 }
                 const data = await res.json()
-                // filter out cancelled orders
-                const visible = (data || []).filter(o => !(o.status && String(o.status).toUpperCase().startsWith('CANCEL')))
+                // Keep all orders (including cancelled) but sort with active first
+                const allOrders = (data || [])
                 // Remove duplicates by checking order ID
-                const uniqueOrders = Array.from(new Map(visible.map(o => [o.id, o])).values())
-                setOrders(uniqueOrders)
+                const uniqueOrders = Array.from(new Map(allOrders.map(o => [o.id, o])).values())
+                // Sort: active orders first, then cancelled
+                const sorted = uniqueOrders.sort((a, b) => {
+                    const aIsCancelled = a.status && String(a.status).toUpperCase().startsWith('CANCEL')
+                    const bIsCancelled = b.status && String(b.status).toUpperCase().startsWith('CANCEL')
+                    return aIsCancelled ? 1 : bIsCancelled ? -1 : 0
+                })
+                setOrders(sorted)
             } catch (err) {
                 console.error('Failed to fetch orders:', err)
                 setOrders([])
