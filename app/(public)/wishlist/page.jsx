@@ -43,7 +43,7 @@ export default function WishlistPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-4">
-                        {wishlistItems.map(item => (
+                        {(wishlistItems || []).map(item => (
                             <div key={item.id} className="flex items-center justify-between bg-white p-3 rounded shadow">
                                 <div className="flex items-center gap-3">
                                     <div className="bg-slate-100 size-14 rounded flex items-center justify-center">

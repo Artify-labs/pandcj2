@@ -53,7 +53,7 @@ export default function StoreOrders({ params }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {orders.map(order => (
+                            {(orders || []).map(order => (
                                 <OrderItem order={order} key={order.id} editable={true} onStatusChange={async (orderId, newStatus) => {
                                     try {
                                         // optimistic update

@@ -13,7 +13,9 @@ const OrderSummary = ({ totalPrice, items }) => {
 
     const router = useRouter();
 
-    const addressList = useSelector(state => state.address.list);
+    // Safe fallback for addressList - handle undefined/null
+    const addressListFromRedux = useSelector(state => state.address?.list);
+    const addressList = Array.isArray(addressListFromRedux) ? addressListFromRedux : [];
 
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [showAddressModal, setShowAddressModal] = useState(false);
@@ -68,7 +70,7 @@ const OrderSummary = ({ totalPrice, items }) => {
 
         try {
             const payload = {
-                items: items.map(it => {
+                items: (items || []).map(it => {
                     const product = it.product || it
                     return {
                         productId: product?.id || null,
@@ -214,7 +216,7 @@ const OrderSummary = ({ totalPrice, items }) => {
 
     // Fetch shipping charges when address or items change
     useEffect(() => {
-        if (!selectedAddress || items.length === 0) {
+        if (!selectedAddress || !items || items.length === 0) {
             setShippingCharge(0)
             setEstimatedDays(null)
             return
@@ -224,7 +226,7 @@ const OrderSummary = ({ totalPrice, items }) => {
             setLoadingShipping(true)
             try {
                 const requestBody = {
-                    items: items.map(it => {
+                    items: (items || []).map(it => {
                         const product = it.product || it
                         return {
                             productId: product?.id,

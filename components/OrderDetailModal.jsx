@@ -35,7 +35,7 @@ export default function OrderDetailModal({ open, order, onClose }) {
         <section className="mb-4">
           <h4 className="font-medium">Items</h4>
           <ul className="text-sm text-slate-700">
-            {order.orderItems.map((it, i) => (
+            {(order?.orderItems || []).map((it, i) => (
               <li key={i} className="py-2 border-b last:border-b-0">
                 <div className="flex justify-between">
                   <div>

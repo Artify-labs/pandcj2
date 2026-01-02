@@ -12,7 +12,7 @@ import { useSelector } from "react-redux"
     const search = searchParams.get('search')
     const router = useRouter()
 
-    const products = useSelector(state => state.product.list)
+    const products = useSelector(state => state.product.list || [])
 
     const filteredProducts = (search
         ? products.filter(product =>
