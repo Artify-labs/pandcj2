@@ -7,7 +7,8 @@ import { useParams } from "next/navigation"
 
 export default function StoreEditProduct() {
 
-    const { productId } = useParams()
+    const params = useParams()
+    const productId = Array.isArray(params.productId) ? params.productId[0] : params.productId
     const categories = ['Earrings', 'Necklace', 'Heavy Necklace', 'Fashionable Earrings', 'Others']
 
     const [images, setImages] = useState({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
