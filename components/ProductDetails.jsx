@@ -29,28 +29,38 @@ const ProductDetails = ({ product = {} }) => {
 
     const [mainImage, setMainImage] = useState(images[0]);
     const [showReviewForm, setShowReviewForm] = useState(false);
+    const [reviewCount, setReviewCount] = useState(0);
+    const [averageRating, setAverageRating] = useState(0);
     const imgWrapRef = useRef(null);
     const [showLens, setShowLens] = useState(false);
     const [lensStyle, setLensStyle] = useState({});
-    const [reviewCount, setReviewCount] = useState(0);
     const ZOOM_LEVEL = 2.5;
     const LENS_SIZE = 260;
 
-    // Fetch review count from API
+    // Fetch reviews and calculate average rating from API
     useEffect(() => {
         if (productId) {
-            const fetchReviewCount = async () => {
+            const fetchReviews = async () => {
                 try {
                     const res = await fetch(`/api/ratings/product?productId=${productId}`);
                     if (res.ok) {
                         const data = await res.json();
-                        setReviewCount(data.count || 0);
+                        const reviews = data.data || [];
+                        setReviewCount(reviews.length);
+                        
+                        // Calculate average rating from reviews
+                        if (reviews.length > 0) {
+                            const avgRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length;
+                            setAverageRating(avgRating);
+                        } else {
+                            setAverageRating(0);
+                        }
                     }
                 } catch (err) {
-                    console.error('Error fetching review count:', err);
+                    console.error('Error fetching reviews:', err);
                 }
             };
-            fetchReviewCount();
+            fetchReviews();
         }
     }, [productId]);
 
