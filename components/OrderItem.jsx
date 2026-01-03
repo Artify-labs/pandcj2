@@ -21,32 +21,43 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
             <tr className={`text-sm ${isCancelled ? 'opacity-60 bg-red-50' : ''}`}>
                 <td className="text-left">
                     <div className="flex flex-col gap-6">
-                        {(order?.orderItems || []).map((item, index) => (
+                        {(order?.orderItems || order?.items || []).map((item, index) => {
+                            // Handle both data structures: enriched items with product object, and simple items with productId
+                            const product = item.product || item
+                            const productName = product?.name || 'Unknown Product'
+                            const productImages = product?.images || []
+                            const imageUrl = productImages?.[0]
+                            
+                            return (
                             <div key={index} className="flex items-center gap-4">
                                 <div className={`w-20 aspect-square bg-slate-100 flex items-center justify-center rounded-md ${isCancelled ? 'opacity-50' : ''}`}>
-                                    <Image
-                                        className="h-14 w-auto"
-                                        src={item.product.images[0]}
-                                        alt="product_img"
-                                        width={50}
-                                        height={50}
-                                    />
+                                    {imageUrl ? (
+                                        <Image
+                                            className="h-14 w-auto object-contain"
+                                            src={imageUrl}
+                                            alt="product_img"
+                                            width={50}
+                                            height={50}
+                                        />
+                                    ) : (
+                                        <span className="text-slate-400 text-xs text-center">No Image</span>
+                                    )}
                                 </div>
                                 <div className="flex flex-col justify-center text-sm">
                                     <p className={`font-medium text-base ${isCancelled ? 'line-through text-red-600' : 'text-slate-600'}`}>
-                                        {item.product.name}
+                                        {productName}
                                     </p>
                                     <p className={isCancelled ? 'line-through text-red-600' : ''}>{currency}{item.price} Qty : {item.quantity}</p>
                                     <p className="mb-1">{new Date(order.createdAt).toDateString()}</p>
                                     <div>
-                                        {ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId)
-                                            ? <Rating value={ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId).rating} />
-                                            : <button onClick={() => setRatingModal({ orderId: order.id, productId: item.product.id })} className={`text-yellow-500 hover:bg-yellow-50 transition ${(order.status !== "DELIVERED" || isCancelled) && 'hidden'}`}>Rate Product</button>
+                                        {ratings.find(rating => order.id === rating.orderId && (product?.id || item.productId) === rating.productId)
+                                            ? <Rating value={ratings.find(rating => order.id === rating.orderId && (product?.id || item.productId) === rating.productId).rating} />
+                                            : <button onClick={() => setRatingModal({ orderId: order.id, productId: product?.id || item.productId })} className={`text-yellow-500 hover:bg-yellow-50 transition ${(order.status !== "DELIVERED" || isCancelled) && 'hidden'}`}>Rate Product</button>
                                         }</div>
                                     {ratingModal && <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />}
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 </td>
 

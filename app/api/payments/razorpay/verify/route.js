@@ -96,6 +96,7 @@ export async function POST(req) {
         console.log('[Razorpay] Found pending order:', pendingOrder ? 'YES' : 'NO')
         
         createdOrder = await mongodb.order.update(localOrderId, {
+          items: enrichedItems,
           status: 'confirmed',
           isPaid: true,
           paymentId: razorpay_payment_id,
