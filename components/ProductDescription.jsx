@@ -2,7 +2,7 @@
 import { ArrowRight, StarIcon, Edit2Icon, Trash2Icon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import ReviewForm from "./ReviewForm"
 import EditReviewForm from "./EditReviewForm"
 import { useUser } from "@clerk/nextjs"
@@ -16,19 +16,27 @@ const ProductDescription = ({ product = {} }) => {
     const [loading, setLoading] = useState(false)
     const [editingReview, setEditingReview] = useState(null)
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, ratingId: null })
+    const lastFetchRef = useRef(0)
 
     const description = product?.description || '';
     const ratings = Array.isArray(product?.rating) ? product.rating : [];
     const store = product?.store || {};
 
-    // Fetch reviews from API
+    // Fetch reviews on component mount for better performance
     useEffect(() => {
-        if (selectedTab === 'Reviews' && product?.id) {
+        if (product?.id) {
             fetchReviews();
         }
-    }, [selectedTab, product?.id])
+    }, [product?.id])
 
     const fetchReviews = async () => {
+        // Prevent fetching more than once every 1 second to reduce lag
+        const now = Date.now();
+        if (now - lastFetchRef.current < 1000) {
+            return;
+        }
+        lastFetchRef.current = now;
+
         try {
             setLoading(true);
             const res = await fetch(`/api/ratings/product?productId=${product.id}`);
@@ -44,8 +52,8 @@ const ProductDescription = ({ product = {} }) => {
     }
 
     const handleReviewSuccess = async () => {
-        // Ensure we wait a moment for the database to sync, then refetch
-        await new Promise(r => setTimeout(r, 500));
+        // Reduced delay for faster feedback
+        await new Promise(r => setTimeout(r, 300));
         await fetchReviews();
     }
 
