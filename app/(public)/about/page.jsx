@@ -11,10 +11,8 @@ export default function About() {
           <div className="md:col-span-1">
             <div className="w-full h-64 bg-slate-100 rounded overflow-hidden">
               <Image
-                src="/assets/pandcjewellery.jpg"
-                alt="About"
-                width={800}
-                height={600}
+                src="/images/pandcjewellery.jpg"
+                alt="About P&C Jewellery"
                 className="object-cover w-full h-full"
               />
             </div>
