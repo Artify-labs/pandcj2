@@ -8,7 +8,7 @@ const razorpayInstance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, payload } = body || {}
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, payload, localOrderId } = body || {}
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return new Response(JSON.stringify({ error: 'Invalid signature payload' }), { status: 400 })
@@ -21,6 +21,7 @@ export async function POST(req) {
       try {
         console.log('[razorpay:verify] incoming signature:', razorpay_signature)
         console.log('[razorpay:verify] computed signature:', expected)
+        console.log('[razorpay:verify] localOrderId received:', localOrderId)
         console.log('[razorpay:verify] payload (truncated):', JSON.stringify(payload).length > 2000 ? JSON.stringify(payload).slice(0, 2000) + '...[truncated]' : JSON.stringify(payload))
       } catch (e) { /* ignore logging errors */ }
     }
@@ -29,7 +30,7 @@ export async function POST(req) {
     }
 
     // signature valid — handle payment and create DB order from payload
-    const { items, total, address, userId, localOrderId, couponCode } = payload || {}
+    const { items, total, address, userId, couponCode } = payload || {}
     if (!items || !Array.isArray(items) || items.length === 0) {
       return new Response(JSON.stringify({ error: 'No items to create order' }), { status: 400 })
     }
@@ -86,17 +87,53 @@ export async function POST(req) {
 
     // Update the pending order to confirmed (don't create new one)
     let createdOrder
+    console.log('[Razorpay] Processing order - localOrderId:', localOrderId, 'userId:', uid)
+    
     if (localOrderId) {
-      // Update existing pending order to confirmed
-      createdOrder = await mongodb.order.update(localOrderId, {
-        status: 'confirmed',
-        isPaid: true,
-        paymentId: razorpay_payment_id,
-        paymentMethod: 'razorpay',
-        finalTotal: (Number(total) || 0) - discountAmount,
-        discountAmount
-      })
+      // First, try to update the existing pending order
+      try {
+        const pendingOrder = await mongodb.order.findById(localOrderId)
+        console.log('[Razorpay] Found pending order:', pendingOrder ? 'YES' : 'NO')
+        
+        createdOrder = await mongodb.order.update(localOrderId, {
+          status: 'confirmed',
+          isPaid: true,
+          paymentId: razorpay_payment_id,
+          paymentMethod: 'razorpay',
+          finalTotal: (Number(total) || 0) - discountAmount,
+          discountAmount,
+          updatedAt: new Date()
+        })
+        console.log('[Razorpay] ✅ Updated pending order to confirmed:', localOrderId, '| Updated order ID:', createdOrder?.id)
+      } catch (updateErr) {
+        console.warn('[Razorpay] ⚠️ Could not update order, creating new one:', updateErr.message)
+        // If update fails, create new order
+        const orderId = randomUUID()
+        createdOrder = await mongodb.order.create({
+          id: orderId,
+          userId: uid,
+          items: enrichedItems,
+          total: Number(total) || 0,
+          discountAmount,
+          finalTotal: (Number(total) || 0) - discountAmount,
+          address: address || {},
+          paymentMethod: 'razorpay',
+          paymentId: razorpay_payment_id,
+          couponCode: couponCode || null,
+          status: 'confirmed',
+          isPaid: true,
+        })
+        console.log('[Razorpay] Created new order:', orderId)
+        // Try to delete the old pending order
+        try {
+          await mongodb.order.delete(localOrderId)
+          console.log('[Razorpay] 🗑️ Deleted old pending order:', localOrderId)
+        } catch (delErr) {
+          console.warn('[Razorpay] Could not delete pending order:', delErr.message)
+        }
+      }
     } else {
+      console.warn('[Razorpay] ⚠️ No localOrderId provided - creating new order instead of updating!')
       // Fallback: Create new order if no local order ID
       const orderId = randomUUID()
       createdOrder = await mongodb.order.create({
