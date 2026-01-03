@@ -129,18 +129,19 @@ const ProductDescription = ({ product = {} }) => {
                                     {/* Review Content */}
                                     <div className="flex-1 min-w-0">
                                         {/* Rating Stars */}
-                                        <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                                        <div className="flex items-center gap-1 sm:gap-2 mb-2">
                                             {Array(5).fill('').map((_, i) => (
                                                 <StarIcon
                                                     key={i}
-                                                    size={14}
-                                                    className='sm:size-4'
-                                                    fill={(item?.rating || 0) >= i + 1 ? "#FFD700" : "#D1D5DB"}
-                                                    stroke={(item?.rating || 0) >= i + 1 ? "#FFD700" : "#D1D5DB"}
+                                                    size={16}
+                                                    className='sm:size-5'
+                                                    fill={(item?.rating || 0) >= i + 1 ? "#FFD700" : "#E5E7EB"}
+                                                    stroke={(item?.rating || 0) >= i + 1 ? "#FFD700" : "#E5E7EB"}
+                                                    strokeWidth={1.5}
                                                 />
                                             ))}
-                                            <span className="text-xs font-medium text-slate-700 ml-1">
-                                                {item?.rating}/5
+                                            <span className="text-xs font-semibold text-slate-700 ml-2">
+                                                {item?.rating || 0}/5
                                             </span>
                                         </div>
 
