@@ -32,14 +32,20 @@ export async function DELETE(req, { params }) {
 
         // Check if review exists and belongs to the user
         const review = await ratingsCollection.findOne({
-            _id: new ObjectId(ratingId),
-            userId
+            _id: new ObjectId(ratingId)
         });
 
         if (!review) {
             return new Response(
-                JSON.stringify({ error: 'Review not found or you do not have permission to delete it' }),
+                JSON.stringify({ error: 'Review not found' }),
                 { status: 404 }
+            );
+        }
+
+        if (review.userId !== userId) {
+            return new Response(
+                JSON.stringify({ error: 'You can only delete your own reviews' }),
+                { status: 403 }
             );
         }
 
