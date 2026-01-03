@@ -14,7 +14,8 @@ async function getClient() {
 
 export async function DELETE(req, { params }) {
     try {
-        const { ratingId } = params;
+        // params is a Promise in Next.js 13+, need to await it
+        const { ratingId } = await params;
         let body = {};
         try {
             body = await req.json();

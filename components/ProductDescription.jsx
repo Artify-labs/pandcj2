@@ -15,6 +15,7 @@ const ProductDescription = ({ product = {} }) => {
     const [reviews, setReviews] = useState([])
     const [loading, setLoading] = useState(false)
     const [editingReview, setEditingReview] = useState(null)
+    const [deleteConfirm, setDeleteConfirm] = useState({ show: false, ratingId: null })
 
     const description = product?.description || '';
     const ratings = Array.isArray(product?.rating) ? product.rating : [];
@@ -49,8 +50,6 @@ const ProductDescription = ({ product = {} }) => {
     }
 
     const handleDeleteReview = async (ratingId) => {
-        if (!confirm('Are you sure you want to delete this review?')) return;
-        
         try {
             if (!user?.id) {
                 toast.error('You must be logged in to delete reviews');
@@ -69,6 +68,7 @@ const ProductDescription = ({ product = {} }) => {
             }
 
             toast.success('Review deleted successfully');
+            setDeleteConfirm({ show: false, ratingId: null });
             await fetchReviews();
         } catch (err) {
             console.error(err);
@@ -158,7 +158,7 @@ const ProductDescription = ({ product = {} }) => {
                                                         <Edit2Icon size={14} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDeleteReview(item._id)}
+                                                        onClick={() => setDeleteConfirm({ show: true, ratingId: item._id })}
                                                         className="p-1.5 text-red-500 hover:bg-red-50 rounded transition"
                                                         title="Delete review"
                                                     >
@@ -189,6 +189,34 @@ const ProductDescription = ({ product = {} }) => {
                             onClose={() => setEditingReview(null)}
                             onSuccess={handleReviewSuccess}
                         />
+                    )}
+
+                    {/* Delete Confirmation Modal */}
+                    {deleteConfirm.show && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 sm:p-8">
+                                <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-3">
+                                    Delete Review?
+                                </h3>
+                                <p className="text-sm sm:text-base text-slate-600 mb-6">
+                                    Are you sure you want to delete this review? This action cannot be undone.
+                                </p>
+                                <div className="flex gap-3 justify-end">
+                                    <button
+                                        onClick={() => setDeleteConfirm({ show: false, ratingId: null })}
+                                        className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg transition font-medium text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteReview(deleteConfirm.ratingId)}
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition font-medium text-sm"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             )}
