@@ -42,27 +42,41 @@ const OrderStatusTimeline = ({ status, createdAt }) => {
       ) : (
         <div className="space-y-6">
           {/* Progress Bar */}
-          <div className="relative">
-            <div className="flex justify-between mb-8">
+          <div className="relative px-2">
+            {/* Background connecting line */}
+            <div className="absolute left-8 right-8 top-7 h-2 bg-gray-200 rounded-full -z-20" />
+            
+            {/* Filled progress line */}
+            <div className="absolute top-7 h-2 bg-green-500 rounded-full -z-10 transition-all duration-500" 
+              style={{
+                left: '2rem',
+                right: currentStatusIndex >= 0 ? `calc(100% - ${((currentStatusIndex + 1) / 4) * 100}% + 2rem)` : 'auto',
+                width: currentStatusIndex >= 0 ? `calc(${((currentStatusIndex + 1) / 4) * 100}% - 2rem)` : '0%'
+              }}
+            />
+            
+            <div className="flex justify-between">
               {statuses.map((s, index) => {
                 const Icon = s.icon
                 const isCompleted = index <= currentStatusIndex
                 const isCurrent = index === currentStatusIndex
 
                 return (
-                  <div key={s.value} className="flex flex-col items-center flex-1">
+                  <div key={s.value} className="flex flex-col items-center flex-1 relative z-10">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all ${
+                      className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all border-4 ${
                         isCompleted
-                          ? 'bg-green-500 text-white shadow-lg'
-                          : 'bg-slate-300 text-slate-600'
-                      } ${isCurrent ? 'ring-4 ring-blue-400' : ''}`}
+                          ? 'bg-green-500 text-white border-green-500 shadow-lg'
+                          : isCurrent
+                          ? 'bg-white text-green-500 border-green-500 shadow-md'
+                          : 'bg-gray-100 text-gray-400 border-gray-300'
+                      }`}
                     >
                       <Icon size={24} />
                     </div>
                     <p
-                      className={`text-sm font-medium text-center ${
-                        isCompleted ? 'text-green-600' : 'text-slate-600'
+                      className={`text-sm font-semibold text-center ${
+                        isCompleted ? 'text-green-600' : isCurrent ? 'text-green-600' : 'text-slate-600'
                       }`}
                     >
                       {s.label}
@@ -70,16 +84,6 @@ const OrderStatusTimeline = ({ status, createdAt }) => {
                   </div>
                 )
               })}
-            </div>
-
-            {/* Connecting Line */}
-            <div className="absolute top-6 left-0 right-0 h-1 bg-slate-300 -z-10">
-              <div
-                className="h-full bg-green-500 transition-all duration-500"
-                style={{
-                  width: currentStatusIndex >= 0 ? `${(currentStatusIndex / 3) * 100}%` : '0%'
-                }}
-              />
             </div>
           </div>
 
@@ -267,9 +271,6 @@ export default function OrderDetailPage() {
                       <h3 className="font-semibold text-slate-800 text-lg">{productName}</h3>
                       <p className="text-slate-600 text-sm mt-1">Quantity: {item.quantity}</p>
                       <p className="text-slate-600 text-sm">Price: {currency}{item.price}</p>
-                      {product?.storeId && (
-                        <p className="text-slate-500 text-xs mt-2">Store: {product.storeId}</p>
-                      )}
                     </div>
 
                     {/* Item Total */}
