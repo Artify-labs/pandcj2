@@ -1,32 +1,56 @@
-import gs_logo from "./gs_logo.jpg"
-import happy_store from "./happy_store.webp"
+// Only import files that exist
 import upload_area from "./upload_area.svg"
-import hero_model_img from "./hero_model_img.png"
 import hero_product_img1 from "./hero_product_img1.png"
 import hero_product_img2 from "./hero_product_img2.png"
 import slide_1 from "./slide_1.jpg"
-import product_img1 from "./product_img1.png"
-import product_img2 from "./product_img2.png"
-import product_img3 from "./product_img3.png"
-import product_img4 from "./product_img4.png"
-import product_img5 from "./product_img5.png"
-import product_img6 from "./product_img6.png"
-import product_img7 from "./product_img7.png"
-import product_img8 from "./product_img8.png"
-import product_img9 from "./product_img9.png"
-import product_img10 from "./product_img10.png"
-import product_img11 from "./product_img11.png"
-import product_img12 from "./product_img12.png"
-import { ClockFadingIcon, HeadsetIcon, SendIcon } from "lucide-react";
-import profile_pic1 from "./profile_pic1.jpg"
-import profile_pic2 from "./profile_pic2.jpg"
-import profile_pic3 from "./profile_pic3.jpg"
 import pandcjewellery from "./pandcjewellery.jpg"
 
-    
+import { ClockFadingIcon, HeadsetIcon, SendIcon } from "lucide-react";
+
+// Placeholder URLs for missing assets
+const gs_logo = "/assets/slide_1.jpg"
+const happy_store = "/assets/slide_1.jpg"
+const hero_model_img = "/assets/hero_product_img1.png"
+const product_img1 = "/assets/hero_product_img1.png"
+const product_img2 = "/assets/hero_product_img2.png"
+const product_img3 = "/assets/hero_product_img1.png"
+const product_img4 = "/assets/hero_product_img2.png"
+const product_img5 = "/assets/hero_product_img1.png"
+const product_img6 = "/assets/hero_product_img2.png"
+const product_img7 = "/assets/hero_product_img1.png"
+const product_img8 = "/assets/hero_product_img2.png"
+const product_img9 = "/assets/hero_product_img1.png"
+const product_img10 = "/assets/hero_product_img2.png"
+const product_img11 = "/assets/hero_product_img1.png"
+const product_img12 = "/assets/hero_product_img2.png"
+const profile_pic1 = "/assets/slide_1.jpg"
+const profile_pic2 = "/assets/slide_1.jpg"
+const profile_pic3 = "/assets/slide_1.jpg"
+
 export const assets = {
-pandcjewellery, slide_1, gs_logo, happy_store, upload_area, hero_model_img, hero_product_img1, hero_product_img2, product_img1, product_img2, product_img3, product_img4, product_img5, product_img6, product_img7, product_img8, product_img9, product_img10, product_img11, product_img12,
-profile_pic1, profile_pic2, profile_pic3
+  pandcjewellery,
+  slide_1,
+  gs_logo,
+  happy_store,
+  upload_area,
+  hero_model_img,
+  hero_product_img1,
+  hero_product_img2,
+  product_img1,
+  product_img2,
+  product_img3,
+  product_img4,
+  product_img5,
+  product_img6,
+  product_img7,
+  product_img8,
+  product_img9,
+  product_img10,
+  product_img11,
+  product_img12,
+  profile_pic1,
+  profile_pic2,
+  profile_pic3
 }
 
 export const categories = ["Earrings", "Necklace", "Watch", "Earbuds", "Mouse", "Decoration"];
