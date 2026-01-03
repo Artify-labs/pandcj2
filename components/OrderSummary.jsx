@@ -327,21 +327,21 @@ const OrderSummary = ({ totalPrice, items }) => {
     }, [selectedAddress, items, coupon])
 
     return (
-        <div className='w-full max-w-lg lg:max-w-85 bg-slate-50/30 border border-slate-200 text-slate-500 text-sm rounded-xl p-7'>
-            <h2 className='text-xl font-medium text-slate-600'>Payment Summary</h2>
-            <div className='my-4 py-4 border-y border-slate-200 text-slate-400'>
-                <p>Address</p>
+        <div className='w-full max-w-lg lg:max-w-85 bg-slate-50/30 border border-slate-200 text-slate-500 text-xs sm:text-sm rounded-xl p-4 sm:p-7'>
+            <h2 className='text-lg sm:text-xl font-medium text-slate-600'>Payment Summary</h2>
+            <div className='my-3 sm:my-4 py-3 sm:py-4 border-y border-slate-200 text-slate-400'>
+                <p className='text-xs sm:text-sm font-medium mb-2'>Address</p>
                 {
                     selectedAddress ? (
-                        <div className='flex gap-2 items-center'>
-                            <p>{selectedAddress.name}, {selectedAddress.city}, {selectedAddress.state}, {selectedAddress.zip}</p>
-                            <SquarePenIcon onClick={() => setSelectedAddress(null)} className='cursor-pointer' size={18} />
+                        <div className='flex gap-2 items-start sm:items-center flex-wrap'>
+                            <p className='text-xs sm:text-sm break-words flex-1'>{selectedAddress.name}, {selectedAddress.city}, {selectedAddress.state}, {selectedAddress.zip}</p>
+                            <SquarePenIcon onClick={() => setSelectedAddress(null)} className='cursor-pointer flex-shrink-0' size={16} />
                         </div>
                     ) : (
                         <div>
                             {
                                 addressList.length > 0 && (
-                                    <select className='border border-slate-400 p-2 w-full my-3 outline-none rounded' onChange={(e) => setSelectedAddress(addressList[e.target.value])} >
+                                    <select className='border border-slate-400 p-2 sm:p-2 w-full my-2 sm:my-3 outline-none rounded text-xs sm:text-sm' onChange={(e) => setSelectedAddress(addressList[e.target.value])} >
                                         <option value="">Select Address</option>
                                         {
                                             addressList.map((address, index) => (
@@ -351,13 +351,13 @@ const OrderSummary = ({ totalPrice, items }) => {
                                     </select>
                                 )
                             }
-                            <button className='flex items-center gap-1 text-slate-600 mt-1' onClick={() => setShowAddressModal(true)} >Add Address <PlusIcon size={18} /></button>
+                            <button className='flex items-center gap-1 text-slate-600 mt-1 text-xs sm:text-sm' onClick={() => setShowAddressModal(true)} >Add Address <PlusIcon size={16} /></button>
                         </div>
                     )
                 }
             </div>
-            <div className='pb-4 border-b border-slate-200'>
-                <div className='flex justify-between'>
+            <div className='pb-3 sm:pb-4 border-b border-slate-200'>
+                <div className='flex justify-between gap-2 text-xs sm:text-sm'>
                     <div className='flex flex-col gap-1 text-slate-400'>
                         <p>Subtotal:</p>
                         <p>Shipping:</p>
@@ -365,49 +365,49 @@ const OrderSummary = ({ totalPrice, items }) => {
                     </div>
                     <div className='flex flex-col gap-1 font-medium text-right'>
                         <p>{currency}{totalPrice.toLocaleString()}</p>
-                        <div className='flex items-center gap-2'>
+                        <div className='flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 justify-end'>
                             <p>{currency}{shippingCharge.toFixed(2)}</p>
                             {loadingShipping && <span className='text-xs text-slate-400'>calculating...</span>}
-                            {estimatedDays && <span className='text-xs text-green-600'>({estimatedDays} days)</span>}
+                            {estimatedDays && <span className='text-xs text-green-600'>({estimatedDays}d)</span>}
                         </div>
                         {coupon && <p>{`-${currency}${(coupon.discount / 100 * (totalPrice + shippingCharge)).toFixed(2)}`}</p>}
                     </div>
                 </div>
                 {
                     !coupon ? (
-                        <form onSubmit={e => toast.promise(handleCouponCode(e), { loading: 'Checking Coupon...' })} className='flex justify-center gap-3 mt-3'>
-                            <input onChange={(e) => setCouponCodeInput(e.target.value)} value={couponCodeInput} type="text" placeholder='Coupon Code' className='border border-slate-400 p-1.5 rounded w-full outline-none' />
-                            <button className='bg-slate-600 text-white px-3 rounded hover:bg-slate-800 active:scale-95 transition-all'>Apply</button>
+                        <form onSubmit={e => toast.promise(handleCouponCode(e), { loading: 'Checking Coupon...' })} className='flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2 sm:mt-3'>
+                            <input onChange={(e) => setCouponCodeInput(e.target.value)} value={couponCodeInput} type="text" placeholder='Coupon Code' className='border border-slate-400 p-1.5 sm:p-2 rounded w-full outline-none text-xs sm:text-sm' />
+                            <button className='bg-slate-600 text-white px-3 py-1.5 sm:py-2 rounded hover:bg-slate-800 active:scale-95 transition-all whitespace-nowrap text-xs sm:text-sm'>Apply</button>
                         </form>
                     ) : (
-                        <div className='w-full flex items-center justify-center gap-2 text-xs mt-2'>
-                            <p>Code: <span className='font-semibold ml-1'>{coupon.code.toUpperCase()}</span></p>
-                            <p>{coupon.description}</p>
-                            <XIcon size={18} onClick={() => setCoupon('')} className='hover:text-red-700 transition cursor-pointer' />
+                        <div className='w-full flex items-center justify-center gap-1 sm:gap-2 text-xs mt-2 flex-wrap'>
+                            <p>Code: <span className='font-semibold'>{coupon.code.toUpperCase()}</span></p>
+                            <p className='hidden sm:block'>{coupon.description}</p>
+                            <XIcon size={14} onClick={() => setCoupon('')} className='hover:text-red-700 transition cursor-pointer flex-shrink-0 ml-auto' />
                         </div>
                     )
                 }
             </div>
-            <div className='flex justify-between py-4'>
+            <div className='flex justify-between py-3 sm:py-4 text-xs sm:text-sm'>
                 <p>Total:</p>
                 <p className='font-medium text-right'>{currency}{coupon ? ((totalPrice + shippingCharge) - (coupon.discount / 100 * (totalPrice + shippingCharge))).toFixed(2) : (totalPrice + shippingCharge).toLocaleString()}</p>
             </div>
             <button
                 onClick={handlePlaceClick}
-                className={`w-full py-2.5 rounded active:scale-95 transition-all ${isAuthenticated ? 'bg-slate-700 text-white hover:bg-slate-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                className={`w-full py-2 sm:py-2.5 px-3 rounded active:scale-95 transition-all text-xs sm:text-sm font-medium ${isAuthenticated ? 'bg-slate-700 text-white hover:bg-slate-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
             >
                 {isAuthenticated ? 'Place Order' : 'Login to Place Order'}
             </button>
 
             {/* Login required modal */}
             {showLoginModal && (
-                <div onClick={() => setShowLoginModal(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div onClick={e => e.stopPropagation()} className="bg-white p-6 rounded shadow max-w-sm w-full">
-                        <h3 className="text-lg font-semibold mb-2">Login required</h3>
-                        <p className="text-sm text-slate-600 mb-4">You need to be logged in to place an order.</p>
-                        <div className="flex gap-2 justify-end">
-                            <button onClick={() => setShowLoginModal(false)} className="px-3 py-2 bg-slate-200 rounded">Cancel</button>
-                            <button onClick={() => router.push('/sign-in')} className="px-3 py-2 bg-slate-700 text-white rounded">Sign in</button>
+                <div onClick={() => setShowLoginModal(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div onClick={e => e.stopPropagation()} className="bg-white p-4 sm:p-6 rounded shadow max-w-sm w-full">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2">Login required</h3>
+                        <p className="text-xs sm:text-sm text-slate-600 mb-4">You need to be logged in to place an order.</p>
+                        <div className="flex gap-2 justify-end flex-col-reverse sm:flex-row">
+                            <button onClick={() => setShowLoginModal(false)} className="px-3 py-2 bg-slate-200 rounded text-xs sm:text-sm">Cancel</button>
+                            <button onClick={() => router.push('/sign-in')} className="px-3 py-2 bg-slate-700 text-white rounded text-xs sm:text-sm">Sign in</button>
                         </div>
                     </div>
                 </div>

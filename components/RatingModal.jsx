@@ -55,36 +55,74 @@ const RatingModal = ({ ratingModal, setRatingModal }) => {
     }
 
     return (
-        <div className='fixed inset-0 z-120 flex items-center justify-center bg-black/10'>
-            <div className='bg-white p-8 rounded-lg shadow-lg w-96 relative'>
-                <button onClick={() => setRatingModal(null)} className='absolute top-3 right-3 text-gray-500 hover:text-gray-700'>
-                    <XIcon size={20} />
-                </button>
-                <h2 className='text-xl font-medium text-slate-600 mb-4'>Rate Product</h2>
-                <div className='flex items-center justify-center mb-4'>
-                    {Array.from({ length: 5 }, (_, i) => (
-                        <Star
-                            key={i}
-                            className={`size-8 cursor-pointer ${rating > i ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-                            onClick={() => setRating(i + 1)}
-                        />
-                    ))}
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
+            <div className='bg-white rounded-lg shadow-xl w-full max-w-md relative max-h-[90vh] overflow-y-auto'>
+                <div className='sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 flex items-center justify-between'>
+                    <h2 className='text-lg sm:text-xl font-semibold text-slate-800'>Rate Product</h2>
+                    <button 
+                        onClick={() => setRatingModal(null)} 
+                        className='p-1 text-gray-500 hover:text-gray-700 transition'
+                    >
+                        <XIcon size={20} />
+                    </button>
                 </div>
-                <textarea
-                    className='w-full p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-400'
-                    placeholder='Write your review (optional)'
-                    rows='4'
-                    value={review}
-                    onChange={(e) => setReview(e.target.value)}
-                    disabled={loading}
-                ></textarea>
-                <button 
-                    onClick={handleSubmit} 
-                    disabled={loading}
-                    className='w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed'
-                >
-                    {loading ? 'Submitting...' : 'Submit Rating'}
-                </button>
+
+                <div className='p-4 sm:p-6 space-y-6'>
+                    {/* Star Rating */}
+                    <div>
+                        <p className='text-sm font-medium text-slate-700 mb-3'>Your Rating</p>
+                        <div className='flex items-center gap-2 justify-center'>
+                            {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                    key={i}
+                                    className={`size-8 sm:size-10 cursor-pointer transition ${rating > i ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                                    onClick={() => setRating(i + 1)}
+                                />
+                            ))}
+                        </div>
+                        {rating > 0 && (
+                            <p className='text-center text-sm text-yellow-600 mt-3'>
+                                {rating} star{rating !== 1 ? 's' : ''}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Review Text */}
+                    <div>
+                        <label className='block text-sm font-medium text-slate-700 mb-2'>
+                            Your Review (minimum 5 characters)
+                        </label>
+                        <textarea
+                            className='w-full p-3 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none text-sm'
+                            placeholder='Share your experience...'
+                            rows='4'
+                            value={review}
+                            onChange={(e) => setReview(e.target.value)}
+                            disabled={loading}
+                        />
+                        <p className='text-xs text-slate-500'>
+                            {review.length} characters
+                        </p>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className='flex gap-3 flex-col sm:flex-row pt-4 border-t border-gray-200'>
+                        <button
+                            onClick={() => setRatingModal(null)}
+                            disabled={loading}
+                            className='flex-1 px-4 py-2 border border-gray-300 rounded-md text-slate-700 font-medium hover:bg-gray-50 transition disabled:bg-gray-100 disabled:text-gray-400 text-sm'
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={handleSubmit} 
+                            disabled={loading}
+                            className='flex-1 px-4 py-2 bg-yellow-500 text-white font-medium rounded-md hover:bg-yellow-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm'
+                        >
+                            {loading ? 'Submitting...' : 'Submit Rating'}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     )

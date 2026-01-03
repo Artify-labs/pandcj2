@@ -45,12 +45,12 @@ const ProductDescription = ({ product = {} }) => {
     }
 
     return (
-        <div className="my-18 text-sm text-slate-600">
+        <div className="my-12 sm:my-18 text-xs sm:text-sm text-slate-600">
 
             {/* Tabs */}
-            <div className="flex border-b border-slate-200 mb-6 max-w-2xl">
+            <div className="flex border-b border-slate-200 mb-4 sm:mb-6 max-w-2xl">
                 {['Description', 'Reviews'].map((tab, index) => (
-                    <button className={`${tab === selectedTab ? 'border-b-[1.5px] font-semibold' : 'text-slate-400'} px-3 py-2 font-medium`} key={index} onClick={() => setSelectedTab(tab)}>
+                    <button className={`${tab === selectedTab ? 'border-b-[1.5px] font-semibold' : 'text-slate-400'} px-2 sm:px-4 py-2 font-medium text-xs sm:text-sm`} key={index} onClick={() => setSelectedTab(tab)}>
                         {tab}
                     </button>
                 ))}
@@ -58,7 +58,7 @@ const ProductDescription = ({ product = {} }) => {
 
             {/* Description */}
             {selectedTab === "Description" && (
-                <p className="max-w-xl">{description}</p>
+                <p className="max-w-xl text-xs sm:text-sm leading-relaxed">{description}</p>
             )}
 
             {/* Reviews */}
@@ -68,7 +68,7 @@ const ProductDescription = ({ product = {} }) => {
                     {user && (
                         <button
                             onClick={() => setShowReviewForm(true)}
-                            className="mb-6 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-medium text-sm sm:text-base"
+                            className="mb-4 sm:mb-6 px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-medium text-xs sm:text-sm"
                         >
                             Write a Review
                         </button>
@@ -86,17 +86,17 @@ const ProductDescription = ({ product = {} }) => {
 
                     {/* Reviews List */}
                     {loading ? (
-                        <p className="text-slate-500">Loading reviews...</p>
+                        <p className="text-slate-500 text-xs sm:text-sm">Loading reviews...</p>
                     ) : reviews.length > 0 ? (
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-4 sm:gap-6">
                             {reviews.map((item, index) => (
-                                <div key={index} className="flex gap-3 sm:gap-5 pb-6 border-b border-slate-200 last:border-0">
+                                <div key={index} className="flex gap-2 sm:gap-4 pb-4 sm:pb-6 border-b border-slate-200 last:border-0">
                                     {/* Avatar */}
                                     <div className="flex-shrink-0">
                                         <Image
                                             src={item?.userImage || '/assets/slide_1.jpg'}
                                             alt={item?.userName || 'User'}
-                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full object-cover"
                                             width={50}
                                             height={50}
                                             onError={(e) => { e.target.src = '/assets/slide_1.jpg' }}
@@ -106,30 +106,30 @@ const ProductDescription = ({ product = {} }) => {
                                     {/* Review Content */}
                                     <div className="flex-1 min-w-0">
                                         {/* Rating Stars */}
-                                        <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex items-center gap-1 sm:gap-2 mb-1">
                                             {Array(5).fill('').map((_, i) => (
                                                 <StarIcon
                                                     key={i}
-                                                    size={16}
-                                                    className='text-transparent'
+                                                    size={12}
+                                                    className='text-transparent sm:size-[16px]'
                                                     fill={(item?.rating || 0) >= i + 1 ? "#FFD700" : "#D1D5DB"}
                                                 />
                                             ))}
-                                            <span className="text-xs sm:text-sm font-medium text-slate-700">
+                                            <span className="text-xs font-medium text-slate-700 ml-1">
                                                 {item?.rating}/5
                                             </span>
                                         </div>
 
                                         {/* User Name and Date */}
-                                        <p className="font-semibold text-slate-800 text-sm sm:text-base">
+                                        <p className="font-semibold text-slate-800 text-xs sm:text-sm md:text-base">
                                             {item?.userName || 'Anonymous'}
                                         </p>
-                                        <p className="text-xs sm:text-sm text-slate-500 mb-2">
+                                        <p className="text-xs text-slate-500 mb-2">
                                             {item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
                                         </p>
 
                                         {/* Review Text */}
-                                        <p className="text-sm sm:text-base text-slate-700 leading-relaxed break-words">
+                                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed break-words">
                                             {item?.review || ''}
                                         </p>
                                     </div>
@@ -137,12 +137,12 @@ const ProductDescription = ({ product = {} }) => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-10">
-                            <p className="text-slate-500 mb-4">No reviews yet. Be the first to review!</p>
+                        <div className="text-center py-6 sm:py-10">
+                            <p className="text-slate-500 mb-3 sm:mb-4 text-xs sm:text-sm">No reviews yet. Be the first to review!</p>
                             {user && (
                                 <button
                                     onClick={() => setShowReviewForm(true)}
-                                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-medium text-sm"
+                                    className="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-medium text-xs sm:text-sm"
                                 >
                                     Write the First Review
                                 </button>

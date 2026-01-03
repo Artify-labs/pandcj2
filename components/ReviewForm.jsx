@@ -53,26 +53,26 @@ const ReviewForm = ({ productId, productName, onClose, onSuccess }) => {
     };
 
     return (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-            <div className='bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md mx-4 relative'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
+            <div className='bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md relative max-h-[90vh] overflow-y-auto'>
                 <button 
                     onClick={onClose} 
-                    className='absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition'
+                    className='absolute top-3 sm:top-4 right-3 sm:right-4 p-1 text-gray-500 hover:text-gray-700 transition'
                 >
                     <XIcon size={20} />
                 </button>
 
-                <h2 className='text-xl md:text-2xl font-semibold text-slate-800 mb-2'>Write a Review</h2>
-                <p className='text-sm text-slate-600 mb-4'>{productName}</p>
+                <h2 className='text-lg sm:text-xl md:text-2xl font-semibold text-slate-800 mb-1 pr-8'>Write a Review</h2>
+                <p className='text-xs sm:text-sm text-slate-600 mb-4'>{productName}</p>
 
                 {/* Star Rating */}
-                <div className='mb-6'>
-                    <p className='text-sm font-medium text-slate-700 mb-3'>Your Rating</p>
-                    <div className='flex items-center gap-2 justify-center'>
+                <div className='mb-5 sm:mb-6'>
+                    <p className='text-xs sm:text-sm font-medium text-slate-700 mb-2 sm:mb-3'>Your Rating</p>
+                    <div className='flex items-center gap-1.5 sm:gap-2 justify-center'>
                         {Array.from({ length: 5 }, (_, i) => (
                             <Star
                                 key={i}
-                                className={`size-8 md:size-10 cursor-pointer transition ${
+                                className={`size-7 sm:size-8 md:size-10 cursor-pointer transition ${
                                     rating > i 
                                         ? 'text-yellow-400 fill-current' 
                                         : 'text-gray-300'
@@ -82,19 +82,19 @@ const ReviewForm = ({ productId, productName, onClose, onSuccess }) => {
                         ))}
                     </div>
                     {rating > 0 && (
-                        <p className='text-center text-sm text-yellow-600 mt-2'>
+                        <p className='text-center text-xs sm:text-sm text-yellow-600 mt-2'>
                             {rating} star{rating !== 1 ? 's' : ''}
                         </p>
                     )}
                 </div>
 
                 {/* Review Text */}
-                <div className='mb-6'>
-                    <label className='block text-sm font-medium text-slate-700 mb-2'>
+                <div className='mb-5 sm:mb-6'>
+                    <label className='block text-xs sm:text-sm font-medium text-slate-700 mb-2'>
                         Your Review (minimum 5 characters)
                     </label>
                     <textarea
-                        className='w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none text-sm'
+                        className='w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none text-xs sm:text-sm'
                         placeholder='Share your experience with this product...'
                         rows='4'
                         value={review}
@@ -107,18 +107,18 @@ const ReviewForm = ({ productId, productName, onClose, onSuccess }) => {
                 </div>
 
                 {/* Buttons */}
-                <div className='flex gap-3 flex-col sm:flex-row'>
+                <div className='flex gap-2 sm:gap-3 flex-col-reverse sm:flex-row pt-3 sm:pt-4 border-t border-gray-200'>
                     <button
                         onClick={onClose}
                         disabled={loading}
-                        className='flex-1 px-4 py-2 border border-gray-300 rounded-md text-slate-700 font-medium hover:bg-gray-50 transition disabled:bg-gray-100 disabled:text-gray-400'
+                        className='flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-md text-slate-700 font-medium hover:bg-gray-50 transition disabled:bg-gray-100 disabled:text-gray-400 text-xs sm:text-sm'
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className='flex-1 px-4 py-2 bg-yellow-500 text-white font-medium rounded-md hover:bg-yellow-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed'
+                        className='flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-yellow-500 text-white font-medium rounded-md hover:bg-yellow-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-xs sm:text-sm'
                     >
                         {loading ? 'Submitting...' : 'Submit Review'}
                     </button>

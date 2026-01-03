@@ -50,38 +50,43 @@ const ProductCard = ({ product }) => {
                         {product?.images && product.images.length > 0 ? (
                             <Image width={500} height={500} className='object-cover w-full h-full' src={product.images[0]} alt={product.name || ''} />
                         ) : (
-                            <div className='w-full h-full flex items-center justify-center text-slate-400'>No Image</div>
+                            <div className='w-full h-full flex items-center justify-center text-slate-400 text-xs text-center'>No Image</div>
                         )}
                     </div>
                     {(product.inStock === false || product.stock === 'out_of_stock') && (
                         <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
-                            <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-md font-medium">Out of stock</span>
+                            <span className="bg-rose-100 text-rose-600 px-2 sm:px-3 py-1 rounded-md font-medium text-xs sm:text-sm">Out of stock</span>
                         </div>
                     )}
                     <div className='flex items-start justify-between gap-3 text-sm text-slate-800 pt-2 max-w-full'>
-                        <div className='min-w-0'>
-                            <p className='font-medium text-sm text-slate-800 truncate'>{product.name}</p>
+                        <div className='min-w-0 flex-1'>
+                            <p className='font-medium text-xs sm:text-sm text-slate-800 truncate'>{product.name}</p>
                             <div className='flex gap-1 mt-1'>
                                 {Array(5).fill('').map((_, index) => (
-                                    <StarIcon key={index} size={14} className='text-transparent mt-0.5 shrink-0' fill={rating >= index + 1 ? "#00C950" : "#D1D5DB"} />
+                                    <StarIcon key={index} size={12} className='sm:size-[14px] text-transparent mt-0.5 shrink-0' fill={rating >= index + 1 ? "#00C950" : "#D1D5DB"} />
                                 ))}
                             </div>
                         </div>
-                        <p className='ml-3 whitespace-nowrap font-semibold'>{currency}{product.price}</p>
+                        <p className='whitespace-nowrap font-semibold text-xs sm:text-sm'>{currency}{product.price}</p>
                     </div>
                 </Link>
 
-                <button onClick={toggleWishlist} className={`absolute right-2 top-2 p-3 rounded-full ${inWishlist ? 'bg-rose-100 text-rose-600' : 'bg-white/90 text-slate-600'} shadow-lg`} aria-label="Toggle wishlist">
-                    <Heart size={18} />
+                {/* Wishlist Button - always visible */}
+                <button 
+                    onClick={toggleWishlist} 
+                    className={`absolute right-2 top-2 p-2 sm:p-3 rounded-full transition ${inWishlist ? 'bg-rose-100 text-rose-600' : 'bg-white/90 text-slate-600'} shadow-lg`} 
+                    aria-label="Toggle wishlist"
+                >
+                    <Heart size={16} className='sm:size-[18px]' />
                 </button>
 
-                {/* Review Button - visible on hover */}
+                {/* Review Button - visible on hover (desktop) and always on mobile */}
                 <button
                     onClick={handleReviewClick}
-                    className='absolute left-2 top-2 p-3 rounded-full bg-white/90 text-slate-600 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200'
+                    className='absolute left-2 top-2 p-2 sm:p-3 rounded-full bg-white/90 text-slate-600 shadow-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200'
                     aria-label="Write review"
                 >
-                    <MessageCircle size={18} />
+                    <MessageCircle size={16} className='sm:size-[18px]' />
                 </button>
             </div>
 

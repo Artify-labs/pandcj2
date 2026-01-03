@@ -59,8 +59,17 @@ const OrderItem = ({ order, editable = false, onStatusChange = null, onCancel = 
                                     <div>
                                         {ratings.find(rating => order.id === rating.orderId && (product?.id || item.productId) === rating.productId)
                                             ? <Rating value={ratings.find(rating => order.id === rating.orderId && (product?.id || item.productId) === rating.productId).rating} />
-                                            : <button onClick={(e) => { e.stopPropagation(); setRatingModal({ orderId: order.id, productId: product?.id || item.productId }) }} className={`text-yellow-500 hover:bg-yellow-50 transition ${(order.status !== "DELIVERED" || isCancelled) && 'hidden'}`}>Rate Product</button>
-                                        }</div>
+                                            : (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setRatingModal({ orderId: order.id, productId: product?.id || item.productId }) }} 
+                                                    className={`text-yellow-500 hover:bg-yellow-50 transition text-xs sm:text-sm py-1 px-2 rounded ${
+                                                        (order.status !== "DELIVERED" || isCancelled) && 'hidden'
+                                                    }`}
+                                                >
+                                                    Rate Product
+                                                </button>
+                                            )}
+                                    </div>
                                     {ratingModal && <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />}
                                 </div>
                             </div>
