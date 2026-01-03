@@ -3,12 +3,14 @@
 import { addToCart } from "@/lib/features/cart/cartSlice";
 import { toast } from 'react-hot-toast'
 import { addToWishlist, removeFromWishlist } from '@/lib/features/wishlist/wishlistSlice'
-import { StarIcon, TagIcon, EarthIcon, CreditCardIcon, UserIcon, Heart } from "lucide-react";
+import { StarIcon, TagIcon, EarthIcon, CreditCardIcon, UserIcon, Heart, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Counter from "./Counter";
+import ReviewForm from "./ReviewForm";
 import { useDispatch, useSelector } from "react-redux";
+import { useUser } from "@clerk/nextjs";
 
 const ProductDetails = ({ product = {} }) => {
     const productId = product?.id ?? '';
@@ -18,6 +20,7 @@ const ProductDetails = ({ product = {} }) => {
     const wishlistItems = useSelector(state => state.wishlist?.items || [])
     const inWishlist = wishlistItems.find(i => i.id === productId)
     const dispatch = useDispatch();
+    const { user } = useUser();
 
     const router = useRouter();
 
@@ -25,11 +28,31 @@ const ProductDetails = ({ product = {} }) => {
     const ratings = Array.isArray(product.rating) && product.rating.length ? product.rating : [];
 
     const [mainImage, setMainImage] = useState(images[0]);
+    const [showReviewForm, setShowReviewForm] = useState(false);
     const imgWrapRef = useRef(null);
     const [showLens, setShowLens] = useState(false);
     const [lensStyle, setLensStyle] = useState({});
+    const [reviewCount, setReviewCount] = useState(0);
     const ZOOM_LEVEL = 2.5;
     const LENS_SIZE = 260;
+
+    // Fetch review count from API
+    useEffect(() => {
+        if (productId) {
+            const fetchReviewCount = async () => {
+                try {
+                    const res = await fetch(`/api/ratings/product?productId=${productId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setReviewCount(data.count || 0);
+                    }
+                } catch (err) {
+                    console.error('Error fetching review count:', err);
+                }
+            };
+            fetchReviewCount();
+        }
+    }, [productId]);
 
     const addToCartHandler = () => {
         if (!productId) return;
@@ -96,7 +119,7 @@ const ProductDetails = ({ product = {} }) => {
                     {Array(5).fill('').map((_, index) => (
                         <StarIcon key={index} size={14} className='text-transparent mt-0.5' fill={averageRating >= index + 1 ? "#00C950" : "#D1D5DB"} />
                     ))}
-                    <p className="text-sm ml-3 text-slate-500">{ratings.length} Reviews</p>
+                    <p className="text-sm ml-3 text-slate-500">{reviewCount} Review{reviewCount !== 1 ? 's' : ''}</p>
                 </div>
                 <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
                     <p> {currency}{product.price} </p>
@@ -121,6 +144,12 @@ const ProductDetails = ({ product = {} }) => {
                             <Heart size={16} />
                             <span>{inWishlist ? 'In Wishlist' : 'Add to Wishlist'}</span>
                         </button>
+                        {user && (
+                            <button onClick={() => setShowReviewForm(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition font-medium text-sm">
+                                <MessageCircle size={16} />
+                                <span>Write Review</span>
+                            </button>
+                        )}
                     </div>
                 </div>
                 <hr className="border-gray-300 my-5" />
@@ -130,6 +159,21 @@ const ProductDetails = ({ product = {} }) => {
                     <p className="flex gap-3"> <UserIcon className="text-slate-400" /> Trusted by top brands </p>
                 </div>
 
+                {/* Review Form Modal */}
+                {showReviewForm && (
+                    <ReviewForm
+                        productId={productId}
+                        productName={product.name}
+                        onClose={() => setShowReviewForm(false)}
+                        onSuccess={() => {
+                            // Refetch review count
+                            fetch(`/api/ratings/product?productId=${productId}`)
+                                .then(r => r.json())
+                                .then(d => setReviewCount(d.count || 0))
+                                .catch(e => console.error(e));
+                        }}
+                    />
+                )}
             </div>
         </div>
     )

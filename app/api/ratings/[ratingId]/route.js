@@ -1,0 +1,76 @@
+import { MongoClient, ObjectId } from 'mongodb';
+
+const MONGO_URI = process.env.MONGODB_URI;
+const DB_NAME = process.env.DB_NAME || 'pandcjewellery';
+
+async function getClient() {
+    if (!MONGO_URI) throw new Error('MONGODB_URI not set');
+    if (global._mongoClient) return global._mongoClient;
+    const c = new MongoClient(MONGO_URI, { useUnifiedTopology: true });
+    await c.connect();
+    global._mongoClient = c;
+    return c;
+}
+
+export async function DELETE(req, { params }) {
+    try {
+        const { ratingId } = params;
+        const body = await req.json();
+        const { userId } = body;
+
+        // Validate inputs
+        if (!ratingId || !userId) {
+            return new Response(
+                JSON.stringify({ error: 'Rating ID and User ID are required' }),
+                { status: 400 }
+            );
+        }
+
+        const client = await getClient();
+        const db = client.db(DB_NAME);
+        const ratingsCollection = db.collection('ratings');
+
+        // Check if review exists and belongs to the user
+        const review = await ratingsCollection.findOne({
+            _id: new ObjectId(ratingId),
+            userId
+        });
+
+        if (!review) {
+            return new Response(
+                JSON.stringify({ error: 'Review not found or you do not have permission to delete it' }),
+                { status: 404 }
+            );
+        }
+
+        // Delete the review
+        const result = await ratingsCollection.deleteOne({
+            _id: new ObjectId(ratingId)
+        });
+
+        if (result.deletedCount === 0) {
+            return new Response(
+                JSON.stringify({ error: 'Failed to delete review' }),
+                { status: 500 }
+            );
+        }
+
+        return new Response(
+            JSON.stringify({
+                success: true,
+                message: 'Review deleted successfully'
+            }),
+            { status: 200 }
+        );
+
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        return new Response(
+            JSON.stringify({
+                error: 'Failed to delete review',
+                details: error.message
+            }),
+            { status: 500 }
+        );
+    }
+}

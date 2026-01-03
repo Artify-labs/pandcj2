@@ -1,10 +1,12 @@
 'use client'
-import { ArrowRight, StarIcon } from "lucide-react"
+import { ArrowRight, StarIcon, Edit2Icon, Trash2Icon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import ReviewForm from "./ReviewForm"
+import EditReviewForm from "./EditReviewForm"
 import { useUser } from "@clerk/nextjs"
+import toast from "react-hot-toast"
 
 const ProductDescription = ({ product = {} }) => {
 
@@ -12,7 +14,7 @@ const ProductDescription = ({ product = {} }) => {
     const [selectedTab, setSelectedTab] = useState('Description')
     const [reviews, setReviews] = useState([])
     const [loading, setLoading] = useState(false)
-    const [showReviewForm, setShowReviewForm] = useState(false)
+    const [editingReview, setEditingReview] = useState(null)
 
     const description = product?.description || '';
     const ratings = Array.isArray(product?.rating) ? product.rating : [];
@@ -40,18 +42,44 @@ const ProductDescription = ({ product = {} }) => {
         }
     }
 
-    const handleReviewSuccess = () => {
-        fetchReviews();
+    const handleReviewSuccess = async () => {
+        // Ensure we wait a moment for the database to sync, then refetch
+        await new Promise(r => setTimeout(r, 500));
+        await fetchReviews();
+    }
+
+    const handleDeleteReview = async (ratingId) => {
+        if (!confirm('Are you sure you want to delete this review?')) return;
+        
+        try {
+            const res = await fetch(`/api/ratings/${ratingId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user?.id }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Failed to delete review');
+            }
+
+            toast.success('Review deleted successfully');
+            await fetchReviews();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message || 'Could not delete review');
+        }
     }
 
     return (
         <div className="my-12 sm:my-18 text-xs sm:text-sm text-slate-600">
 
             {/* Tabs */}
-            <div className="flex border-b border-slate-200 mb-4 sm:mb-6 max-w-2xl">
+            <div className="flex border-b border-slate-200 mb-4 sm:mb-6 max-w-2xl items-center">
                 {['Description', 'Reviews'].map((tab, index) => (
-                    <button className={`${tab === selectedTab ? 'border-b-[1.5px] font-semibold' : 'text-slate-400'} px-2 sm:px-4 py-2 font-medium text-xs sm:text-sm`} key={index} onClick={() => setSelectedTab(tab)}>
+                    <button className={`${tab === selectedTab ? 'border-b-[1.5px] font-semibold' : 'text-slate-400'} px-2 sm:px-4 py-2 font-medium text-xs sm:text-sm flex items-center gap-2`} key={index} onClick={() => setSelectedTab(tab)}>
                         {tab}
+                        {tab === 'Reviews' && <span className='text-xs bg-slate-200 px-2 py-0.5 rounded-full'>{reviews.length}</span>}
                     </button>
                 ))}
             </div>
@@ -64,25 +92,7 @@ const ProductDescription = ({ product = {} }) => {
             {/* Reviews */}
             {selectedTab === "Reviews" && (
                 <div className="w-full">
-                    {/* Write Review Button */}
-                    {user && (
-                        <button
-                            onClick={() => setShowReviewForm(true)}
-                            className="mb-4 sm:mb-6 px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-medium text-xs sm:text-sm"
-                        >
-                            Write a Review
-                        </button>
-                    )}
-
-                    {/* Review Form Modal */}
-                    {showReviewForm && (
-                        <ReviewForm
-                            productId={product.id}
-                            productName={product.name}
-                            onClose={() => setShowReviewForm(false)}
-                            onSuccess={handleReviewSuccess}
-                        />
-                    )}
+                    {/* Review Form Modal - removed, now in ProductDetails */}
 
                     {/* Reviews List */}
                     {loading ? (
@@ -121,12 +131,36 @@ const ProductDescription = ({ product = {} }) => {
                                         </div>
 
                                         {/* User Name and Date */}
-                                        <p className="font-semibold text-slate-800 text-xs sm:text-sm md:text-base">
-                                            {item?.userName || 'Anonymous'}
-                                        </p>
-                                        <p className="text-xs text-slate-500 mb-2">
-                                            {item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
-                                        </p>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-slate-800 text-xs sm:text-sm md:text-base">
+                                                    {item?.userName || 'Anonymous'}
+                                                </p>
+                                                <p className="text-xs text-slate-500 mb-2">
+                                                    {item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+                                                </p>
+                                            </div>
+                                            
+                                            {/* Edit/Delete Buttons - only show for review author */}
+                                            {user?.id === item?.userId && (
+                                                <div className="flex gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={() => setEditingReview({...item, productName: product.name})}
+                                                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition"
+                                                        title="Edit review"
+                                                    >
+                                                        <Edit2Icon size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteReview(item._id)}
+                                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded transition"
+                                                        title="Delete review"
+                                                    >
+                                                        <Trash2Icon size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {/* Review Text */}
                                         <p className="text-xs sm:text-sm text-slate-700 leading-relaxed break-words">
@@ -139,15 +173,16 @@ const ProductDescription = ({ product = {} }) => {
                     ) : (
                         <div className="text-center py-6 sm:py-10">
                             <p className="text-slate-500 mb-3 sm:mb-4 text-xs sm:text-sm">No reviews yet. Be the first to review!</p>
-                            {user && (
-                                <button
-                                    onClick={() => setShowReviewForm(true)}
-                                    className="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-medium text-xs sm:text-sm"
-                                >
-                                    Write the First Review
-                                </button>
-                            )}
                         </div>
+                    )}
+
+                    {/* Edit Review Modal */}
+                    {editingReview && (
+                        <EditReviewForm
+                            review={editingReview}
+                            onClose={() => setEditingReview(null)}
+                            onSuccess={handleReviewSuccess}
+                        />
                     )}
                 </div>
             )}
