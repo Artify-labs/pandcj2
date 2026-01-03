@@ -116,7 +116,7 @@ const OrderSummary = ({ totalPrice, items }) => {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                 amount: amount,
                 currency: currency || 'INR',
-                name: 'Gocart',
+                name: 'P&C Jewellery',
                 description: 'Order Payment',
                 order_id: razorpayOrderId,
                 handler: async function (response) {

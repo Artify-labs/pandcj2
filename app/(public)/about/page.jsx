@@ -5,13 +5,13 @@ export default function About() {
   return (
     <div className="min-h-screen mx-6 text-slate-800">
       <div className="max-w-7xl mx-auto py-10">
-        <PageTitle heading="About GoCart" text="Who we are and what we do" linkText="Home" />
+        <PageTitle heading="About P&C Jewellery" text="Who we are and what we do" linkText="Home" />
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           <div className="md:col-span-1">
             <div className="w-full h-64 bg-slate-100 rounded overflow-hidden">
               <Image
-                src="/assets/slide_1.jpg"
+                src="/assets/pandcjewellery.jpg"
                 alt="About"
                 width={800}
                 height={600}
@@ -21,23 +21,24 @@ export default function About() {
           </div>
 
           <div className="md:col-span-2 text-slate-600 space-y-4">
-            <h2 className="text-2xl font-semibold">Hi — Welcome to GoCart</h2>
+            <h2 className="text-2xl font-semibold">Hi — Welcome to P&C Jewellery</h2>
             <p className="text-sm">
-              GoCart is a lightweight demo storefront built to showcase a minimal
-              e-commerce experience. It focuses on clean UI, simple cart flows, and an
-              extensible component-driven codebase you can use as a starting point.
+              P&C Jewellery is a Retail Jewellery Store offerring a wide range of trendy and elegant
+              jewellery pieces. Founded in 2025, we have quickly become a go-to destination for fashion-forward
+              individuals looking to accessorize their outfits with unique and stylish jewellery.
             </p>
 
-            <h3 className="text-lg font-medium">Our Mission</h3>
+            <h3 className="text-lg font-medium">Our Vision</h3>
             <p className="leading-relaxed">
-              Make it simple for developers to ship commerce experiences quickly — with
-              pragmatic primitives and scalable patterns.
+              Our Vision is to provide high-quality, affordable jewellery that allows our customers to express
+              their individuality and enhance their personal style. We believe that jewellery is more than just an
+              accessory — it's a form of self-expression and a way to celebrate life's special moments.
             </p>
 
             <h3 className="text-lg font-medium">Contact</h3>
-            <p className="leading-relaxed">For feedback or questions: support@gocart.example</p>
+            <p className="leading-relaxed">For feedback or questions: pandcjewellery@gmail.com</p>
 
-            <div className="pt-4 text-sm text-slate-500">© {new Date().getFullYear()} GoCart</div>
+            <div className="pt-4 text-sm text-slate-500">© {new Date().getFullYear()} P&C Jewellery</div>
           </div>
         </div>
       </div>

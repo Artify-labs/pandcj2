@@ -47,7 +47,7 @@ const Navbar = () => {
                         <Link href="/">Home</Link>
                         <Link href="/shop">Shop</Link>
                         <Link href="/orders">Orders</Link>
-                        <Link href="/">About</Link>
+                        <Link href="/about">About</Link>
 
                         <form onSubmit={handleSearch} className={`hidden xl:flex items-center w-xs text-sm gap-2 px-4 py-3 rounded-full ${scrolled ? 'bg-slate-100' : 'bg-white/20'}`}>
                             <Search size={18} className="text-slate-600" />
