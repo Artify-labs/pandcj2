@@ -3,6 +3,7 @@
 import Script from 'next/script'
 import { useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
 function GoogleAnalyticsInner({ GA_MEASUREMENT_ID }) {
   const pathname = usePathname()
@@ -46,7 +47,9 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }) {
           `,
         }}
       />
-      <GoogleAnalyticsInner GA_MEASUREMENT_ID={GA_MEASUREMENT_ID} />
+      <Suspense fallback={null}>
+        <GoogleAnalyticsInner GA_MEASUREMENT_ID={GA_MEASUREMENT_ID} />
+      </Suspense>
     </>
   )
 }
