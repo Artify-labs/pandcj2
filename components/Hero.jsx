@@ -13,6 +13,7 @@ const Hero = ({ initial = null }) => {
     useEffect(() => {
         let mounted = true
         let es
+        let esTimeout
         let pollInterval
         let initialFetchTimeout
 

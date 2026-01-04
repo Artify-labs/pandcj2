@@ -20,6 +20,7 @@ export default function AdminPageIntro() {
     // Set up EventSource for real-time updates
     let mounted = true
     let es
+    let esTimeout
     let pollInterval
 
     const fetchLatest = async () => {
@@ -46,7 +47,7 @@ export default function AdminPageIntro() {
       console.log('[AdminPageIntro] EventSource connected')
       
       // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
-      const esTimeout = setTimeout(() => {
+      esTimeout = setTimeout(() => {
         console.warn('[AdminPageIntro] EventSource timeout (3s), closing and relying on polling')
         if (es) {
           es.close()
@@ -59,6 +60,7 @@ export default function AdminPageIntro() {
           // Clear timeout once we get a message
           if (esTimeout) {
             clearTimeout(esTimeout)
+            esTimeout = null
           }
           const msg = JSON.parse(ev.data)
           console.log('[AdminPageIntro] EventSource update received:', msg)
