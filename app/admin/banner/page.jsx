@@ -7,18 +7,26 @@ import FileButton from '@/components/FileButton'
 
 export default function AdminBanner() {
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [settings, setSettings] = useState({})
   const autoSaveTimeoutRef = useRef(null)
   const hasUnsavedChangesRef = useRef(false)
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include' })
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout
+      
+      const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include', signal: controller.signal })
+      clearTimeout(timeout)
+      
       const data = await res.json()
       setSettings(data || {})
       hasUnsavedChangesRef.current = false
     } catch (err) {
-      console.error(err)
+      if (err.name !== 'AbortError') {
+        console.error('[AdminBanner] Fetch error:', err?.message || err)
+      }
     } finally {
       setLoading(false)
     }
@@ -34,14 +42,22 @@ export default function AdminBanner() {
     autoSaveTimeoutRef.current = setTimeout(async () => {
       try {
         console.log('[AdminBanner] Auto-saving:', newSettings)
-        const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newSettings) })
+        
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout for save
+        
+        const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newSettings), signal: controller.signal })
+        clearTimeout(timeout)
+        
         const json = await res.json()
         if (res.ok) {
           console.log('[AdminBanner] Auto-save successful')
           hasUnsavedChangesRef.current = false
         }
       } catch (err) {
-        console.error('[AdminBanner] Auto-save failed:', err)
+        if (err.name !== 'AbortError') {
+          console.error('[AdminBanner] Auto-save failed:', err?.message || err)
+        }
       }
     }, 2000)
   }
@@ -52,6 +68,7 @@ export default function AdminBanner() {
     // Set up EventSource for real-time updates - only when no unsaved changes
     let mounted = true
     let es
+    let esTimeout
     let pollInterval
 
     const fetchLatest = async () => {
@@ -59,7 +76,12 @@ export default function AdminBanner() {
       if (hasUnsavedChangesRef.current) return
 
       try {
-        const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include' })
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout for polling
+        
+        const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include', signal: controller.signal })
+        clearTimeout(timeout)
+        
         if (res.ok) {
           const data = await res.json()
           if (mounted && data && !hasUnsavedChangesRef.current) {
@@ -68,19 +90,35 @@ export default function AdminBanner() {
           }
         }
       } catch (e) {
-        console.error('[AdminBanner] Poll error:', e)
+        if (e.name !== 'AbortError') {
+          console.error('[AdminBanner] Poll error:', e?.message || e)
+        }
       }
     }
 
-    // Poll every 3 seconds for updates as fallback - but only if no unsaved changes
-    pollInterval = setInterval(fetchLatest, 3000)
+    // Poll every 5 seconds for updates as fallback - but only if no unsaved changes
+    pollInterval = setInterval(fetchLatest, 5000)
 
     try {
       es = new EventSource('/api/settings/stream?key=banner')
       console.log('[AdminBanner] EventSource connected')
       
+      // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
+      esTimeout = setTimeout(() => {
+        console.warn('[AdminBanner] EventSource timeout (3s), closing and relying on polling')
+        if (es) {
+          es.close()
+          es = null
+        }
+      }, 3000)
+      
       es.addEventListener('update', (ev) => {
         try {
+          // Clear timeout once we get a message
+          if (esTimeout) {
+            clearTimeout(esTimeout)
+            esTimeout = null
+          }
           const msg = JSON.parse(ev.data)
           console.log('[AdminBanner] EventSource update received:', msg)
           // Only update if no unsaved changes
@@ -93,8 +131,12 @@ export default function AdminBanner() {
       })
 
       es.onerror = () => {
-        console.error('[AdminBanner] EventSource error')
-        if (es) es.close()
+        console.error('[AdminBanner] EventSource error, closing connection and relying on polling')
+        if (es) {
+          es.close()
+          es = null
+        }
+        if (esTimeout) clearTimeout(esTimeout)
       }
     } catch (e) {
       console.error('[AdminBanner] EventSource setup error:', e)
@@ -103,6 +145,7 @@ export default function AdminBanner() {
     return () => {
       mounted = false
       if (es) es.close()
+      if (esTimeout) clearTimeout(esTimeout)
       if (pollInterval) clearInterval(pollInterval)
     }
   }, [])
@@ -244,6 +287,7 @@ export default function AdminBanner() {
             if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current)
             const saveImmediate = async () => {
               try {
+                setSaving(true)
                 console.log('[AdminBanner] Manual save:', settings)
                 const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
                 if (res.ok) {
@@ -252,10 +296,12 @@ export default function AdminBanner() {
                 }
               } catch (err) {
                 toast.error('Save failed')
+              } finally {
+                setSaving(false)
               }
             }
             saveImmediate()
-          }} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">Save Now</button>
+          }} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active:scale-95 active:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 text-sm font-medium transition-all duration-150 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">{saving ? 'Saving...' : 'Save Now'}</button>
         </div>
       </div>
     </div>

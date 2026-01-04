@@ -8,11 +8,15 @@ const PageIntro = ({ initial = null }) => {
   useEffect(() => {
     let mounted = true
     let es
+    let esTimeout
     let pollInterval
 
     const fetchLatest = async () => {
       try {
-        const res = await fetch(`/api/admin/pageintro?ts=${Date.now()}`)
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout for polling
+        const res = await fetch(`/api/admin/pageintro?ts=${Date.now()}`, { signal: controller.signal })
+        clearTimeout(timeout)
         if (res.ok) {
           const data = await res.json()
           if (mounted && data && data.title) {
@@ -21,7 +25,7 @@ const PageIntro = ({ initial = null }) => {
           }
         }
       } catch (e) {
-        console.error('[PageIntro] Poll error:', e)
+        if (e.name !== 'AbortError') console.error('[PageIntro] Poll error:', e)
       }
     }
 
@@ -32,8 +36,22 @@ const PageIntro = ({ initial = null }) => {
       es = new EventSource('/api/settings/stream?key=pageintro')
       console.log('[PageIntro] EventSource connected')
       
+      // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
+      esTimeout = setTimeout(() => {
+        console.warn('[PageIntro] EventSource timeout (3s), closing and relying on polling')
+        if (es) {
+          es.close()
+          es = null
+        }
+      }, 3000)
+      
       es.addEventListener('update', (ev) => {
         try {
+          // Clear timeout once we get a message
+          if (esTimeout) {
+            clearTimeout(esTimeout)
+            esTimeout = null
+          }
           const msg = JSON.parse(ev.data)
           console.log('[PageIntro] EventSource update received:', msg)
           if (mounted && msg && msg.data) {
@@ -45,8 +63,12 @@ const PageIntro = ({ initial = null }) => {
       })
 
       es.onerror = () => {
-        console.error('[PageIntro] EventSource error')
-        if (es) es.close()
+        console.error('[PageIntro] EventSource error, closing connection and relying on polling')
+        if (es) {
+          es.close()
+          es = null
+        }
+        if (esTimeout) clearTimeout(esTimeout)
       }
     } catch (e) {
       console.error('[PageIntro] EventSource setup error:', e)
@@ -56,6 +78,7 @@ const PageIntro = ({ initial = null }) => {
       mounted = false
       if (es) es.close()
       if (pollInterval) clearInterval(pollInterval)
+      if (esTimeout) clearTimeout(esTimeout)
     }
   }, [])
 

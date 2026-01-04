@@ -14,11 +14,17 @@ const Hero = ({ initial = null }) => {
         let mounted = true
         let es
         let pollInterval
+        let initialFetchTimeout
 
-        // Fetch initial data immediately on mount
+        // Fetch initial data immediately on mount with timeout
         const fetchInitial = async () => {
           try {
-            const res = await fetch(`/api/admin/banner?ts=${Date.now()}`)
+            const controller = new AbortController()
+            initialFetchTimeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+            
+            const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { signal: controller.signal })
+            clearTimeout(initialFetchTimeout)
+            
             if (res.ok) {
               const data = await res.json()
               if (mounted && data) {
@@ -27,7 +33,7 @@ const Hero = ({ initial = null }) => {
               }
             }
           } catch (e) {
-            console.error('[Hero] Initial fetch error:', e)
+            console.error('[Hero] Initial fetch error:', e?.message || e)
           }
         }
 
@@ -36,7 +42,12 @@ const Hero = ({ initial = null }) => {
 
         const fetchLatest = async () => {
           try {
-            const res = await fetch(`/api/admin/banner?ts=${Date.now()}`)
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout for polling
+            
+            const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { signal: controller.signal })
+            clearTimeout(timeout)
+            
             if (res.ok) {
               const data = await res.json()
               if (mounted && data) {
@@ -45,19 +56,35 @@ const Hero = ({ initial = null }) => {
               }
             }
           } catch (e) {
-            console.error('[Hero] Poll error:', e)
+            if (e.name !== 'AbortError') {
+              console.error('[Hero] Poll error:', e?.message || e)
+            }
           }
         }
 
-        // Poll every 3 seconds for updates
-        pollInterval = setInterval(fetchLatest, 3000)
+        // Poll every 5 seconds for updates (increased from 3 to reduce load)
+        pollInterval = setInterval(fetchLatest, 5000)
 
         try {
             es = new EventSource('/api/settings/stream?key=banner')
             console.log('[Hero] EventSource connected')
             
+            // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
+            esTimeout = setTimeout(() => {
+                console.warn('[Hero] EventSource timeout (3s), closing and relying on polling')
+                if (es) {
+                    es.close()
+                    es = null
+                }
+            }, 3000)
+            
             es.addEventListener('update', (ev) => {
                 try {
+                    // Clear timeout once we get a message
+                    if (esTimeout) {
+                        clearTimeout(esTimeout)
+                        esTimeout = null
+                    }
                     const msg = JSON.parse(ev.data)
                     console.log('[Hero] EventSource update received:', msg)
                     if (mounted && msg && msg.data) {
@@ -70,8 +97,12 @@ const Hero = ({ initial = null }) => {
             })
             
             es.onerror = () => {
-                console.error('[Hero] EventSource error')
-                if (es) es.close()
+                console.error('[Hero] EventSource error, closing connection and relying on polling')
+                if (es) {
+                    es.close()
+                    es = null
+                }
+                if (esTimeout) clearTimeout(esTimeout)
             }
         } catch (e) { 
             console.error('[Hero] EventSource setup error:', e)
@@ -81,6 +112,8 @@ const Hero = ({ initial = null }) => {
             mounted = false
             if (es) es.close()
             if (pollInterval) clearInterval(pollInterval)
+            if (initialFetchTimeout) clearTimeout(initialFetchTimeout)
+            if (esTimeout) clearTimeout(esTimeout)
         }
     }, [])
 
@@ -116,7 +149,7 @@ const Hero = ({ initial = null }) => {
                             <p className='text-2xl sm:text-3xl text-black'>{currency}{left.price}</p>
                         </div>
                         <a href={left.learnMoreLink} className='inline-block'>
-                            <button className='bg-slate-800 text-white text-xs sm:text-sm py-2 sm:py-2.5 px-5 sm:px-7 md:py-3 md:px-10 lg:py-5 lg:px-12 mt-3 sm:mt-4 md:mt-8 lg:mt-10 rounded-md hover:bg-slate-900 hover:scale-103 active:scale-95 transition'>BUY NOW</button>
+                            <button className='bg-slate-800 text-white text-xs sm:text-sm py-2 sm:py-2.5 px-5 sm:px-7 md:py-3 md:px-10 lg:py-5 lg:px-12 mt-3 sm:mt-4 md:mt-8 lg:mt-10 rounded-md hover:bg-slate-900 active:scale-95 active:shadow-lg focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 transition-all duration-150 shadow-md hover:shadow-lg transform hover:scale-105'>BUY NOW</button>
                         </a>
                     </div>
                     <Image className='sm:absolute bottom-0 right-0 md:right-10 w-full sm:max-w-sm' src={left.modelImage} alt="" />

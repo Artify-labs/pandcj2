@@ -34,16 +34,22 @@ export default function Dashboard() {
             // products
             let products = []
             try {
-                const res = await fetch('/api/products')
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 4000) // 4s timeout
+                const res = await fetch('/api/products', { signal: controller.signal })
+                clearTimeout(timeout)
                 if (res.ok) products = await res.json()
-            } catch (e) { products = [] }
+            } catch (e) { if (e.name !== 'AbortError') console.error(e); products = [] }
 
             // orders (query API by store)
             let orders = []
             try {
-                const res = await fetch(`/api/orders?storeId=${encodeURIComponent(storeId)}`)
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 4000) // 4s timeout
+                const res = await fetch(`/api/orders?storeId=${encodeURIComponent(storeId)}`, { signal: controller.signal })
+                clearTimeout(timeout)
                 if (res.ok) orders = await res.json()
-            } catch (e) { orders = [] }
+            } catch (e) { if (e.name !== 'AbortError') console.error(e); orders = [] }
 
             // filter cancelled
             const visibleOrders = orders.filter(o => !(o.status && String(o.status).toUpperCase().startsWith('CANCEL')))

@@ -45,8 +45,21 @@ export default function AdminPageIntro() {
       es = new EventSource('/api/settings/stream?key=pageintro')
       console.log('[AdminPageIntro] EventSource connected')
       
+      // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
+      const esTimeout = setTimeout(() => {
+        console.warn('[AdminPageIntro] EventSource timeout (3s), closing and relying on polling')
+        if (es) {
+          es.close()
+          es = null
+        }
+      }, 3000)
+      
       es.addEventListener('update', (ev) => {
         try {
+          // Clear timeout once we get a message
+          if (esTimeout) {
+            clearTimeout(esTimeout)
+          }
           const msg = JSON.parse(ev.data)
           console.log('[AdminPageIntro] EventSource update received:', msg)
           if (mounted && msg && msg.data) {
@@ -59,8 +72,12 @@ export default function AdminPageIntro() {
       })
 
       es.onerror = () => {
-        console.error('[AdminPageIntro] EventSource error')
-        if (es) es.close()
+        console.error('[AdminPageIntro] EventSource error, closing connection and relying on polling')
+        if (es) {
+          es.close()
+          es = null
+        }
+        if (esTimeout) clearTimeout(esTimeout)
       }
     } catch (e) {
       console.error('[AdminPageIntro] EventSource setup error:', e)

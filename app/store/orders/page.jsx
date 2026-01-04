@@ -14,7 +14,10 @@ export default function StoreOrders({ params }) {
         const fetchStoreOrders = async () => {
             const storeId = 'default-store'
             try {
-                const res = await fetch(`/api/orders?storeId=${storeId}`)
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 4000) // 4s timeout
+                const res = await fetch(`/api/orders?storeId=${storeId}`, { signal: controller.signal })
+                clearTimeout(timeout)
                 if (!res.ok) {
                     setOrders([])
                     setLoading(false)

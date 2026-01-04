@@ -27,7 +27,10 @@ export default function StoreEditProduct() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const res = await fetch(`/api/products/${productId}`)
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 4000) // 4s timeout
+                const res = await fetch(`/api/products/${productId}`, { signal: controller.signal })
+                clearTimeout(timeout)
                 if (!res.ok) throw new Error('Failed to fetch product')
                 const product = await res.json()
                 setProductInfo({
@@ -51,7 +54,7 @@ export default function StoreEditProduct() {
                     setImages(newImages)
                 }
             } catch (e) {
-                console.error(e)
+                if (e.name !== 'AbortError') console.error(e)
                 toast.error('Could not load product')
             } finally {
                 setInitialLoading(false)
@@ -88,7 +91,10 @@ export default function StoreEditProduct() {
                     r.readAsDataURL(file)
                 })
                 const base64 = dataUrl.split(',')[1]
-                const res = await fetch('/api/admin/stores/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: base64, filename: file.name }) })
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout for upload
+                const res = await fetch('/api/admin/stores/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: base64, filename: file.name }), signal: controller.signal })
+                clearTimeout(timeout)
                 const body = await res.json()
                 if (!res.ok) {
                     throw new Error(`Upload failed: ${body?.error?.message || 'Unknown error'}`)
@@ -115,7 +121,10 @@ export default function StoreEditProduct() {
                 storeId: 'default-store'
             }
 
-            const res = await fetch(`/api/admin/products/${productId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 4000) // 4s timeout
+            const res = await fetch(`/api/admin/products/${productId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller.signal })
+            clearTimeout(timeout)
             if (!res.ok) throw new Error('Failed to update product')
             const updated = await res.json()
             toast.success('Product updated')

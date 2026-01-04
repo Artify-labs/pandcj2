@@ -29,13 +29,31 @@ export default function AdminDashboard() {
     const fetchDashboardData = async () => {
         try {
             let products = []
-            try { const r = await fetch('/api/products'); if (r.ok) products = await r.json() } catch (e) { products = [] }
+            try { 
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+                const r = await fetch('/api/products', { signal: controller.signal }); 
+                clearTimeout(timeout)
+                if (r.ok) products = await r.json() 
+            } catch (e) { if (e.name !== 'AbortError') console.error(e); products = [] }
 
             let orders = []
-            try { const r = await fetch('/api/orders'); if (r.ok) orders = await r.json() } catch (e) { orders = [] }
+            try { 
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+                const r = await fetch('/api/orders', { signal: controller.signal }); 
+                clearTimeout(timeout)
+                if (r.ok) orders = await r.json() 
+            } catch (e) { if (e.name !== 'AbortError') console.error(e); orders = [] }
 
             let stores = []
-            try { const r = await fetch('/api/admin/stores', { credentials: 'include' }); if (r.ok) stores = await r.json() } catch (e) { stores = [] }
+            try { 
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+                const r = await fetch('/api/admin/stores', { credentials: 'include', signal: controller.signal }); 
+                clearTimeout(timeout)
+                if (r.ok) stores = await r.json() 
+            } catch (e) { if (e.name !== 'AbortError') console.error(e); stores = [] }
 
             const cancelledOrders = (orders || []).filter(o => (o.status && String(o.status).toUpperCase().startsWith('CANCEL')))
             const visibleOrders = (orders || []).filter(o => !(o.status && String(o.status).toUpperCase().startsWith('CANCEL')))

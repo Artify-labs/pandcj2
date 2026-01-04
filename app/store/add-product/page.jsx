@@ -43,7 +43,10 @@ export default function StoreAddProduct() {
                     r.readAsDataURL(file)
                 })
                 const base64 = dataUrl.split(',')[1]
-                const res = await fetch('/api/admin/stores/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: base64, filename: file.name }) })
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout for upload
+                const res = await fetch('/api/admin/stores/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: base64, filename: file.name }), signal: controller.signal })
+                clearTimeout(timeout)
                 const body = await res.json()
                 if (!res.ok) {
                     throw new Error(`Upload failed: ${body?.error?.message || 'Unknown error'}`)
@@ -68,7 +71,10 @@ export default function StoreAddProduct() {
                 storeId: 'default-store'
             }
 
-            const res = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            const controller2 = new AbortController()
+            const timeout2 = setTimeout(() => controller2.abort(), 4000) // 4s timeout
+            const res = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller2.signal })
+            clearTimeout(timeout2)
             if (!res.ok) throw new Error('Failed to create product')
             const created = await res.json()
             toast.success('Product added')
@@ -76,7 +82,7 @@ export default function StoreAddProduct() {
             setProductInfo({ name: '', description: '', mrp: 0, price: 0, category: '', stock: 'in_stock' })
             setImages({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
         } catch (err) {
-            console.error(err)
+            if (err.name !== 'AbortError') console.error(err)
             toast.error('Could not add product')
         } finally { setLoading(false) }
         

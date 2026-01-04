@@ -16,11 +16,14 @@ export default function StoreManageProducts() {
         const fetchProducts = async () => {
             setLoading(true)
             try {
-                const res = await fetch('/api/products')
+                const controller = new AbortController()
+                const timeout = setTimeout(() => controller.abort(), 4000) // 4s timeout
+                const res = await fetch('/api/products', { signal: controller.signal })
+                clearTimeout(timeout)
                 if (!res.ok) { setProducts([]); return }
                 const data = await res.json()
                 setProducts(data || [])
-            } catch (e) { console.error(e); setProducts([]) }
+            } catch (e) { if (e.name !== 'AbortError') console.error(e); setProducts([]) }
             finally { setLoading(false) }
         }
         fetchProducts()
@@ -30,12 +33,15 @@ export default function StoreManageProducts() {
 
     const deleteProduct = async (productId) => {
         try {
-            const res = await fetch(`/api/admin/products/${productId}`, { method: 'DELETE' })
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+            const res = await fetch(`/api/admin/products/${productId}`, { method: 'DELETE', signal: controller.signal })
+            clearTimeout(timeout)
             if (!res.ok) throw new Error('Delete failed')
             const data = await res.json()
             setProducts(prev => prev.filter(p => p.id !== data.id))
             toast.success('Deleted')
-        } catch (e) { console.error(e); toast.error('Could not delete product') }
+        } catch (e) { if (e.name !== 'AbortError') console.error(e); toast.error('Could not delete product') }
     }
 
     if (loading) return <Loading />

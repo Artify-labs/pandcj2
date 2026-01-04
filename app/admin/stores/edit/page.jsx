@@ -32,7 +32,10 @@ export default function AdminStoreEdit() {
       if (storeId) {
         try {
           // Try the server API first
-          const res = await fetch(`/api/admin/stores?userId=${storeId}`)
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+          const res = await fetch(`/api/admin/stores?userId=${storeId}`, { signal: controller.signal })
+          clearTimeout(timeout)
           if (res.ok) {
             const json = await res.json()
             if (json && json.id) {
@@ -49,7 +52,7 @@ export default function AdminStoreEdit() {
             }
           }
         } catch (e) {
-          console.error('Failed to load store', e)
+          if (e.name !== 'AbortError') console.error('Failed to load store', e)
         }
       }
       setLoading(false)
@@ -72,17 +75,21 @@ export default function AdminStoreEdit() {
       try {
         setUploading(true)
         const filename = `${Date.now()}_${file.name}`
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout for upload
         const res = await fetch('/api/admin/stores/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename, data: dataUrl }),
+          signal: controller.signal
         })
+        clearTimeout(timeout)
         if (!res.ok) throw new Error('upload failed')
         const json = await res.json()
         setForm((s) => ({ ...s, logo: json.url }))
         setPreview(json.url)
       } catch (err) {
-        console.error(err)
+        if (err.name !== 'AbortError') console.error(err)
         // ignore — toast will show on save
       } finally {
         setUploading(false)
