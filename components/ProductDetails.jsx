@@ -104,8 +104,8 @@ const ProductDetails = ({ product = {} }) => {
                         backgroundPosition: `-${Math.max(0, Math.min(rect.width * ZOOM_LEVEL - LENS_SIZE, bgX))}px -${Math.max(0, Math.min(rect.height * ZOOM_LEVEL - LENS_SIZE, bgY))}px`
                     });
                     setShowLens(true);
-                }} onMouseLeave={() => setShowLens(false)} className="relative flex justify-center items-center h-100 sm:size-113 bg-slate-100 rounded-lg overflow-hidden">
-                    <Image src={mainImage} alt="" width={250} height={250} />
+                }} onMouseLeave={() => setShowLens(false)} className="relative flex justify-center items-center h-100 sm:size-113 rounded-lg overflow-hidden bg-slate-100">
+                    <Image src={mainImage} alt="" width={250} height={250} className="w-full h-full object-cover" />
                     {showLens && (
                         <div style={{
                             position: 'absolute',
