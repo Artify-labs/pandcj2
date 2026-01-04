@@ -8,15 +8,15 @@ import FileButton from '@/components/FileButton'
 export default function AdminBanner() {
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState({})
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const autoSaveTimeoutRef = useRef(null)
+  const hasUnsavedChangesRef = useRef(false)
 
   const fetchSettings = async () => {
     try {
       const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include' })
       const data = await res.json()
       setSettings(data || {})
-      setHasUnsavedChanges(false)
+      hasUnsavedChangesRef.current = false
     } catch (err) {
       console.error(err)
     } finally {
@@ -24,26 +24,10 @@ export default function AdminBanner() {
     }
   }
 
-  const handleSave = async () => {
-    try {
-      setLoading(true)
-      console.log('[AdminBanner] Saving:', settings)
-      const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
-      const json = await res.json()
-      console.log('[AdminBanner] Save response:', json)
-      if (!res.ok) throw new Error('Failed')
-      toast.success('Saved')
-      setHasUnsavedChanges(false)
-    } catch (err) {
-      toast.error('Save failed')
-      console.error(err)
-    } finally { setLoading(false) }
-  }
-
   // Auto-save after 2 seconds of no changes
   const autoSave = (newSettings) => {
     setSettings(newSettings)
-    setHasUnsavedChanges(true)
+    hasUnsavedChangesRef.current = true
     
     if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current)
     
@@ -54,7 +38,7 @@ export default function AdminBanner() {
         const json = await res.json()
         if (res.ok) {
           console.log('[AdminBanner] Auto-save successful')
-          setHasUnsavedChanges(false)
+          hasUnsavedChangesRef.current = false
         }
       } catch (err) {
         console.error('[AdminBanner] Auto-save failed:', err)
@@ -72,13 +56,13 @@ export default function AdminBanner() {
 
     const fetchLatest = async () => {
       // Don't poll if user is actively editing
-      if (hasUnsavedChanges) return
+      if (hasUnsavedChangesRef.current) return
 
       try {
         const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include' })
         if (res.ok) {
           const data = await res.json()
-          if (mounted && data && !hasUnsavedChanges) {
+          if (mounted && data && !hasUnsavedChangesRef.current) {
             console.log('[AdminBanner] Poll fetched:', data)
             setSettings(data)
           }
@@ -100,7 +84,7 @@ export default function AdminBanner() {
           const msg = JSON.parse(ev.data)
           console.log('[AdminBanner] EventSource update received:', msg)
           // Only update if no unsaved changes
-          if (mounted && msg && msg.data && !hasUnsavedChanges) {
+          if (mounted && msg && msg.data && !hasUnsavedChangesRef.current) {
             setSettings(msg.data)
           }
         } catch (e) {
@@ -254,8 +238,24 @@ export default function AdminBanner() {
           </label>
         </section>
 
-        <div className="flex gap-3">
-          <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+        <div className="flex gap-3 pt-4 border-t border-slate-200">
+          <button onClick={() => {
+            // Force immediate save before refresh
+            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current)
+            const saveImmediate = async () => {
+              try {
+                console.log('[AdminBanner] Manual save:', settings)
+                const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
+                if (res.ok) {
+                  toast.success('Saved')
+                  hasUnsavedChangesRef.current = false
+                }
+              } catch (err) {
+                toast.error('Save failed')
+              }
+            }
+            saveImmediate()
+          }} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">Save Now</button>
         </div>
       </div>
     </div>
