@@ -17,8 +17,8 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
-# Sitemap location
-Sitemap: https://pandcjewellery.com/api/sitemap.xml
+# Sitemap location (at root level)
+Sitemap: https://pandcjewellery.com/sitemap.xml
 
 # Cache directives
 Request-rate: 30/60 (one request per 2 seconds)

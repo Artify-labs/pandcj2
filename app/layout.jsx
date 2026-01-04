@@ -49,7 +49,7 @@ export default function RootLayout({ children }) {
         <html lang="en">
             <head>
                 <link rel="icon" href={assets.pandcjewellery.src} />
-                <link rel="sitemap" type="application/xml" href="/api/sitemap.xml" />
+                <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
                 <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE" />
                 <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
                 
