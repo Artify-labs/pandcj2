@@ -13,14 +13,34 @@ const Hero = ({ initial = null }) => {
     useEffect(() => {
         let mounted = true
         let es
+        let pollInterval
+
+        const fetchLatest = async () => {
+          try {
+            const res = await fetch(`/api/admin/banner?ts=${Date.now()}`)
+            if (res.ok) {
+              const data = await res.json()
+              if (mounted && data) {
+                console.log('[Hero] Poll fetched:', data)
+                setSettings(data)
+              }
+            }
+          } catch (e) {
+            console.error('[Hero] Poll error:', e)
+          }
+        }
+
+        // Poll every 3 seconds for updates
+        pollInterval = setInterval(fetchLatest, 3000)
 
         try {
             es = new EventSource('/api/settings/stream?key=banner')
-            console.log('[Hero] EventSource connected for banner streaming')
+            console.log('[Hero] EventSource connected')
+            
             es.addEventListener('update', (ev) => {
                 try {
                     const msg = JSON.parse(ev.data)
-                    console.log('[Hero] Streaming update received:', msg)
+                    console.log('[Hero] EventSource update received:', msg)
                     if (mounted && msg && msg.data) {
                         console.log('[Hero] Setting banner data:', msg.data)
                         setSettings(msg.data)
@@ -29,8 +49,10 @@ const Hero = ({ initial = null }) => {
                     console.error('[Hero] Parse error:', e)
                 }
             })
-            es.onerror = (err) => {
-                console.error('[Hero] EventSource error:', err)
+            
+            es.onerror = () => {
+                console.error('[Hero] EventSource error')
+                if (es) es.close()
             }
         } catch (e) { 
             console.error('[Hero] EventSource setup error:', e)
@@ -39,6 +61,7 @@ const Hero = ({ initial = null }) => {
         return () => {
             mounted = false
             if (es) es.close()
+            if (pollInterval) clearInterval(pollInterval)
         }
     }, [])
 
