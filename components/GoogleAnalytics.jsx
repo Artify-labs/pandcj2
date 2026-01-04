@@ -4,7 +4,7 @@ import Script from 'next/script'
 import { useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
-export default function GoogleAnalytics({ GA_MEASUREMENT_ID }) {
+function GoogleAnalyticsInner({ GA_MEASUREMENT_ID }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -17,6 +17,10 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }) {
     }
   }, [pathname, searchParams, GA_MEASUREMENT_ID])
 
+  return null
+}
+
+export default function GoogleAnalytics({ GA_MEASUREMENT_ID }) {
   if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID === '') {
     return null
   }
@@ -42,6 +46,7 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }) {
           `,
         }}
       />
+      <GoogleAnalyticsInner GA_MEASUREMENT_ID={GA_MEASUREMENT_ID} />
     </>
   )
 }
