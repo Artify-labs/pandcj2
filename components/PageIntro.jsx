@@ -8,22 +8,54 @@ const PageIntro = ({ initial = null }) => {
   useEffect(() => {
     let mounted = true
     let es
+    let pollInterval
+
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch(`/api/admin/pageintro?ts=${Date.now()}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (mounted && data && data.title) {
+            console.log('[PageIntro] Poll fetched:', data)
+            setSettings(data)
+          }
+        }
+      } catch (e) {
+        console.error('[PageIntro] Poll error:', e)
+      }
+    }
+
+    // Poll every 3 seconds for updates
+    pollInterval = setInterval(fetchLatest, 3000)
 
     try {
       es = new EventSource('/api/settings/stream?key=pageintro')
+      console.log('[PageIntro] EventSource connected')
+      
       es.addEventListener('update', (ev) => {
         try {
           const msg = JSON.parse(ev.data)
+          console.log('[PageIntro] EventSource update received:', msg)
           if (mounted && msg && msg.data) {
             setSettings(msg.data)
           }
-        } catch (e) { }
+        } catch (e) {
+          console.error('[PageIntro] Parse error:', e)
+        }
       })
-    } catch (e) { }
+
+      es.onerror = () => {
+        console.error('[PageIntro] EventSource error')
+        if (es) es.close()
+      }
+    } catch (e) {
+      console.error('[PageIntro] EventSource setup error:', e)
+    }
 
     return () => {
       mounted = false
       if (es) es.close()
+      if (pollInterval) clearInterval(pollInterval)
     }
   }, [])
 

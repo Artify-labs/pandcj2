@@ -36,9 +36,19 @@ export async function GET(req) {
     await writer.ready
     await send({ type: 'initial', data: initial?.value || null })
 
-    // Set up change stream
+    // Set up change stream - watch for updates/inserts on this key
     const changeStream = coll.watch(
-      [{ $match: { 'fullDocument.key': key } }],
+      [
+        {
+          $match: {
+            $or: [
+              { 'fullDocument.key': key, operationType: 'insert' },
+              { 'fullDocument.key': key, operationType: 'update' },
+              { 'fullDocument.key': key, operationType: 'replace' }
+            ]
+          }
+        }
+      ],
       { fullDocument: 'updateLookup' }
     )
 
@@ -46,12 +56,13 @@ export async function GET(req) {
     (async () => {
       try {
         for await (const change of changeStream) {
-          if (change.fullDocument) {
+          if (change.fullDocument && change.fullDocument.key === key) {
+            console.log(`[Settings Stream] Change detected for key: ${key}`, change.operationType)
             await send({ type: 'update', data: change.fullDocument.value })
           }
         }
       } catch (e) {
-        // stream closed or error
+        console.error(`[Settings Stream] Watch error for key ${key}:`, e?.message || e)
       } finally {
         try { await writer.close() } catch (e) {}
         try { await changeStream.close() } catch (e) {}

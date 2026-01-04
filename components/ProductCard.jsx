@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addToWishlist, removeFromWishlist } from '@/lib/features/wishlist/wishlistSlice'
 import { useUser } from '@clerk/nextjs'
 import ReviewForm from './ReviewForm'
+import { generateProductSlug } from '@/lib/productSlug'
 
 const ProductCard = ({ product }) => {
 
@@ -67,7 +68,7 @@ const ProductCard = ({ product }) => {
     return (
         <>
             <div className='group max-xl:mx-auto relative'>
-                <Link href={`/product/${product.id}`} className='block p-2 sm:p-0 rounded-md hover:shadow-sm transition'>
+                <Link href={`/product/${generateProductSlug(product.name, product.id)}`} className='block p-2 sm:p-0 rounded-md hover:shadow-sm transition'>
                     <div className='bg-[#F5F5F5] h-44 sm:h-68 sm:w-60 rounded-lg flex items-center justify-center overflow-hidden'>
                         {product?.images && product.images.length > 0 ? (
                             <Image width={500} height={500} className='object-cover w-full h-full' src={product.images[0]} alt={product.name || ''} />

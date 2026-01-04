@@ -4,6 +4,7 @@ import ProductDetails from "@/components/ProductDetails";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { extractProductIdFromSlug } from "@/lib/productSlug";
 
 export default function Product() {
 
@@ -12,7 +13,9 @@ export default function Product() {
     const products = useSelector(state => state.product.list || []);
 
     const fetchProduct = async () => {
-        const product = products.find((product) => product.id === productId);
+        // Extract actual product ID from slug (slug format: product-name-uuid)
+        const actualId = extractProductIdFromSlug(productId);
+        const product = products.find((product) => product.id === actualId);
         setProduct(product);
     }
 
