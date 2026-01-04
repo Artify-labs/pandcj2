@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb'
 
 const MONGO_URI = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
-const DB_NAME = process.env.MONGODB_DB || process.env.NEXT_PUBLIC_MONGODB_DB || 'gocart'
+const DB_NAME = process.env.MONGODB_DB || process.env.DB_NAME || process.env.NEXT_PUBLIC_MONGODB_DB || 'pandc'
 
 async function getClient() {
   if (!MONGO_URI) throw new Error('MONGODB_URI not set')

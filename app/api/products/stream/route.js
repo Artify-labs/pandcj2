@@ -7,7 +7,7 @@ export async function GET(req) {
 
     const db = await (async () => {
       const client = await mongodb.getMongoClient?.() || (await (await import('@/lib/mongodb')).getMongoClient?.())
-      return client.db(process.env.MONGODB_DB || 'gocart')
+      return client.db(process.env.MONGODB_DB || process.env.DB_NAME || 'pandc')
     })()
 
     const coll = db.collection('products')

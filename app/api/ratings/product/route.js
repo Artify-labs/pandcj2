@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 
 const MONGO_URI = process.env.MONGODB_URI;
-const DB_NAME = process.env.DB_NAME || 'pandcjewellery';
+const DB_NAME = process.env.DB_NAME || 'pandc';
 
 async function getClient() {
   if (!MONGO_URI) throw new Error('MONGODB_URI not set');
