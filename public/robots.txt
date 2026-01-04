@@ -1,0 +1,24 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow private/admin areas
+Disallow: /admin/
+Disallow: /store/
+Disallow: /api/
+Disallow: /*.json$
+
+# Specific rules for better crawling
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://pandcjewellery.com/api/sitemap.xml
+
+# Cache directives
+Request-rate: 30/60 (one request per 2 seconds)

@@ -68,18 +68,41 @@ export default function AdminPageIntro() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h3 className="text-2xl font-semibold mb-4">Edit Page Intro</h3>
-      <label className="block mb-2">Title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full mb-4 p-3 border rounded" />
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
+      <h3 className="text-xl sm:text-2xl font-semibold mb-6">Edit Page Intro</h3>
+      
+      <div className="space-y-4 sm:space-y-6">
+        <div>
+          <label className="block text-sm font-medium mb-2 text-slate-700">Title</label>
+          <input 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+            className="w-full p-2 sm:p-3 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Enter page title"
+          />
+        </div>
 
-      <label className="block mb-2">Image</label>
-      <div className="flex items-center gap-4 mb-4">
-        <FileButton accept="image/*" label={loading ? 'Uploading...' : 'Choose image'} onChange={handleUpload} previewUrl={image || (assets.slide_1?.src ?? assets.slide_1)} />
-      </div>
+        <div>
+          <label className="block text-sm font-medium mb-2 text-slate-700">Image</label>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <FileButton 
+              accept="image/*" 
+              label={loading ? 'Uploading...' : 'Choose image'} 
+              onChange={handleUpload} 
+              previewUrl={image || (assets.slide_1?.src ?? assets.slide_1)} 
+            />
+          </div>
+        </div>
 
-      <div className="flex gap-3">
-        <button onClick={handleSave} disabled={loading} className="px-4 py-2 bg-indigo-600 text-white rounded">{loading ? 'Saving...' : 'Save'}</button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-slate-200">
+          <button 
+            onClick={handleSave} 
+            disabled={loading} 
+            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition"
+          >
+            {loading ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </div>
     </div>
   )
