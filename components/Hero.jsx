@@ -16,15 +16,25 @@ const Hero = ({ initial = null }) => {
 
         try {
             es = new EventSource('/api/settings/stream?key=banner')
+            console.log('[Hero] EventSource connected for banner streaming')
             es.addEventListener('update', (ev) => {
                 try {
                     const msg = JSON.parse(ev.data)
+                    console.log('[Hero] Streaming update received:', msg)
                     if (mounted && msg && msg.data) {
+                        console.log('[Hero] Setting banner data:', msg.data)
                         setSettings(msg.data)
                     }
-                } catch (e) { }
+                } catch (e) { 
+                    console.error('[Hero] Parse error:', e)
+                }
             })
-        } catch (e) { }
+            es.onerror = (err) => {
+                console.error('[Hero] EventSource error:', err)
+            }
+        } catch (e) { 
+            console.error('[Hero] EventSource setup error:', e)
+        }
 
         return () => {
             mounted = false
