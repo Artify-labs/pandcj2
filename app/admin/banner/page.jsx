@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import toast from "react-hot-toast"
 import Image from "next/image"
 import Loading from "@/components/Loading"
@@ -8,12 +8,15 @@ import FileButton from '@/components/FileButton'
 export default function AdminBanner() {
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState({})
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const autoSaveTimeoutRef = useRef(null)
 
   const fetchSettings = async () => {
     try {
       const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include' })
       const data = await res.json()
       setSettings(data || {})
+      setHasUnsavedChanges(false)
     } catch (err) {
       console.error(err)
     } finally {
@@ -21,20 +24,61 @@ export default function AdminBanner() {
     }
   }
 
+  const handleSave = async () => {
+    try {
+      setLoading(true)
+      console.log('[AdminBanner] Saving:', settings)
+      const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
+      const json = await res.json()
+      console.log('[AdminBanner] Save response:', json)
+      if (!res.ok) throw new Error('Failed')
+      toast.success('Saved')
+      setHasUnsavedChanges(false)
+    } catch (err) {
+      toast.error('Save failed')
+      console.error(err)
+    } finally { setLoading(false) }
+  }
+
+  // Auto-save after 2 seconds of no changes
+  const autoSave = (newSettings) => {
+    setSettings(newSettings)
+    setHasUnsavedChanges(true)
+    
+    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current)
+    
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        console.log('[AdminBanner] Auto-saving:', newSettings)
+        const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newSettings) })
+        const json = await res.json()
+        if (res.ok) {
+          console.log('[AdminBanner] Auto-save successful')
+          setHasUnsavedChanges(false)
+        }
+      } catch (err) {
+        console.error('[AdminBanner] Auto-save failed:', err)
+      }
+    }, 2000)
+  }
+
   useEffect(() => { 
     fetchSettings()
 
-    // Set up EventSource for real-time updates
+    // Set up EventSource for real-time updates - only when no unsaved changes
     let mounted = true
     let es
     let pollInterval
 
     const fetchLatest = async () => {
+      // Don't poll if user is actively editing
+      if (hasUnsavedChanges) return
+
       try {
         const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include' })
         if (res.ok) {
           const data = await res.json()
-          if (mounted && data) {
+          if (mounted && data && !hasUnsavedChanges) {
             console.log('[AdminBanner] Poll fetched:', data)
             setSettings(data)
           }
@@ -44,7 +88,7 @@ export default function AdminBanner() {
       }
     }
 
-    // Poll every 3 seconds for updates as fallback
+    // Poll every 3 seconds for updates as fallback - but only if no unsaved changes
     pollInterval = setInterval(fetchLatest, 3000)
 
     try {
@@ -55,7 +99,8 @@ export default function AdminBanner() {
         try {
           const msg = JSON.parse(ev.data)
           console.log('[AdminBanner] EventSource update received:', msg)
-          if (mounted && msg && msg.data) {
+          // Only update if no unsaved changes
+          if (mounted && msg && msg.data && !hasUnsavedChanges) {
             setSettings(msg.data)
           }
         } catch (e) {
@@ -118,26 +163,28 @@ export default function AdminBanner() {
     const reader = new FileReader()
     reader.onload = async () => {
       const dataUrl = reader.result
-      setSettings(prev => {
-        const copy = JSON.parse(JSON.stringify(prev || {}))
+      const newSettings = (() => {
+        const copy = JSON.parse(JSON.stringify(settings || {}))
         const parts = path.split('.')
         let cur = copy
         for (let i=0;i<parts.length-1;i++) { cur[parts[i]] = cur[parts[i]] || {}; cur = cur[parts[i]] }
         cur[parts[parts.length-1]] = dataUrl
         return copy
-      })
+      })()
+      autoSave(newSettings)
 
       try {
         const uploadedUrl = await handleFile(file)
         if (uploadedUrl) {
-          setSettings(prev => {
-            const copy = JSON.parse(JSON.stringify(prev || {}))
+          const finalSettings = (() => {
+            const copy = JSON.parse(JSON.stringify(settings || {}))
             const parts = path.split('.')
             let cur = copy
             for (let i=0;i<parts.length-1;i++) { cur[parts[i]] = cur[parts[i]] || {}; cur = cur[parts[i]] }
             cur[parts[parts.length-1]] = uploadedUrl
             return copy
-          })
+          })()
+          autoSave(finalSettings)
         }
       } catch (err) {
         console.error('Upload failed', err)
@@ -156,28 +203,28 @@ export default function AdminBanner() {
         <section className="bg-white p-4 rounded border">
           <h3 className="font-semibold">Left (Big) Box</h3>
           <label className="block mt-2">News Label <span className="text-xs text-gray-500">(e.g., "NEWS" - the orange badge)</span>
-            <input value={settings.left?.newsLabel||''} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),newsLabel:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.left?.newsLabel||''} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),newsLabel:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">News Description <span className="text-xs text-gray-500">(e.g., "Free Shipping..." - text next to NEWS badge)</span>
-            <input value={settings.left?.newsDescription||''} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),newsDescription:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.left?.newsDescription||''} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),newsDescription:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Main Title <span className="text-xs text-gray-500">(e.g., "Gadgets you'll love. Prices you'll trust." - big heading)</span>
-            <input value={settings.left?.title||''} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),title:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.left?.title||''} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),title:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Price Label <span className="text-xs text-gray-500">(e.g., "Starts from" - label above price)</span>
-            <input value={settings.left?.priceLabel||''} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),priceLabel:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.left?.priceLabel||''} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),priceLabel:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Price <span className="text-xs text-gray-500">(e.g., "3000" - just the number)</span>
-            <input value={settings.left?.price||''} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),price:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.left?.price||''} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),price:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Redirect Link <span className="text-xs text-gray-500">(URL for BUY NOW button)</span>
-            <input value={settings.left?.learnMoreLink||''} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),learnMoreLink:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.left?.learnMoreLink||''} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),learnMoreLink:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Background Image
             <FileButton accept="image/*" label="Choose image" onChange={(e)=>onFileChange(e,'left.bgImage')} previewUrl={settings.left?.bgImage} />
           </label>
           <label className="block mt-2">Background Color
-            <input type="color" value={settings.left?.bgColor||"#DCFCE7"} onChange={e=>setSettings(s=>({...s,left:{...(s.left||{}),bgColor:e.target.value}}))} className="w-24 h-10 p-1 border rounded" />
+            <input type="color" value={settings.left?.bgColor||"#DCFCE7"} onChange={e=>autoSave({...settings,left:{...(settings.left||{}),bgColor:e.target.value}})} className="w-24 h-10 p-1 border rounded" />
           </label>
           <label className="block mt-2">Model/Image
             <FileButton accept="image/*" label="Choose image" onChange={(e)=>onFileChange(e,'left.modelImage')} previewUrl={settings.left?.modelImage} />
@@ -187,10 +234,10 @@ export default function AdminBanner() {
         <section className="bg-white p-4 rounded border">
           <h3 className="font-semibold">Top Right Box</h3>
           <label className="block mt-2">Title <span className="text-xs text-gray-500">(e.g., "Best products")</span>
-            <input value={settings.topRight?.title||''} onChange={e=>setSettings(s=>({...s,topRight:{...(s.topRight||{}),title:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.topRight?.title||''} onChange={e=>autoSave({...settings,topRight:{...(settings.topRight||{}),title:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Link <span className="text-xs text-gray-500">(URL for "View more" link)</span>
-            <input value={settings.topRight?.link||''} onChange={e=>setSettings(s=>({...s,topRight:{...(s.topRight||{}),link:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.topRight?.link||''} onChange={e=>autoSave({...settings,topRight:{...(settings.topRight||{}),link:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Product Image <span className="text-xs text-gray-500">(right side image)</span>
             <FileButton accept="image/*" label="Choose image" onChange={(e)=>onFileChange(e,'topRight.image')} previewUrl={settings.topRight?.image} />
@@ -199,17 +246,17 @@ export default function AdminBanner() {
             <FileButton accept="image/*" label="Choose image" onChange={(e)=>onFileChange(e,'topRight.bgImage')} previewUrl={settings.topRight?.bgImage} />
           </label>
           <label className="block mt-2">Background Color
-            <input type="color" value={settings.topRight?.bgColor||"#FED7AA"} onChange={e=>setSettings(s=>({...s,topRight:{...(s.topRight||{}),bgColor:e.target.value}}))} className="w-24 h-10 p-1 border rounded" />
+            <input type="color" value={settings.topRight?.bgColor||"#FED7AA"} onChange={e=>autoSave({...settings,topRight:{...(settings.topRight||{}),bgColor:e.target.value}})} className="w-24 h-10 p-1 border rounded" />
           </label>
         </section>
 
         <section className="bg-white p-4 rounded border">
           <h3 className="font-semibold">Bottom Right Box</h3>
           <label className="block mt-2">Title <span className="text-xs text-gray-500">(e.g., "20% discounts")</span>
-            <input value={settings.bottomRight?.title||''} onChange={e=>setSettings(s=>({...s,bottomRight:{...(s.bottomRight||{}),title:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.bottomRight?.title||''} onChange={e=>autoSave({...settings,bottomRight:{...(settings.bottomRight||{}),title:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Link <span className="text-xs text-gray-500">(URL for "View more" link)</span>
-            <input value={settings.bottomRight?.link||''} onChange={e=>setSettings(s=>({...s,bottomRight:{...(s.bottomRight||{}),link:e.target.value}}))} className="w-full p-2 border rounded" />
+            <input value={settings.bottomRight?.link||''} onChange={e=>autoSave({...settings,bottomRight:{...(settings.bottomRight||{}),link:e.target.value}})} className="w-full p-2 border rounded" />
           </label>
           <label className="block mt-2">Product Image <span className="text-xs text-gray-500">(right side image)</span>
             <FileButton accept="image/*" label="Choose image" onChange={(e)=>onFileChange(e,'bottomRight.image')} previewUrl={settings.bottomRight?.image} />
@@ -218,7 +265,7 @@ export default function AdminBanner() {
             <FileButton accept="image/*" label="Choose image" onChange={(e)=>onFileChange(e,'bottomRight.bgImage')} previewUrl={settings.bottomRight?.bgImage} />
           </label>
           <label className="block mt-2">Background Color
-            <input type="color" value={settings.bottomRight?.bgColor||"#DBEAFE"} onChange={e=>setSettings(s=>({...s,bottomRight:{...(s.bottomRight||{}),bgColor:e.target.value}}))} className="w-24 h-10 p-1 border rounded" />
+            <input type="color" value={settings.bottomRight?.bgColor||"#DBEAFE"} onChange={e=>autoSave({...settings,bottomRight:{...(settings.bottomRight||{}),bgColor:e.target.value}})} className="w-24 h-10 p-1 border rounded" />
           </label>
         </section>
 
