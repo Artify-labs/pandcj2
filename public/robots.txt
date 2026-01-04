@@ -18,7 +18,7 @@ Allow: /
 Crawl-delay: 1
 
 # Sitemap location (at root level)
-Sitemap: https://pandcjewellery.com/sitemap.xml
+Sitemap: https://pandcjewellery.qzz.io/sitemap.xml
 
 # Cache directives
 Request-rate: 30/60 (one request per 2 seconds)

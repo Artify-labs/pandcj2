@@ -15,13 +15,13 @@ export const metadata = {
     },
     openGraph: {
         type: 'website',
-        url: 'https://pandcjewellery.com',
+        url: 'https://pandcjewellery.qzz.io',
         title: 'P&C Jewellery - Premium Jewelry',
         description: 'Discover exquisite jewelry designs at P&C Jewellery',
         siteName: 'P&C Jewellery',
         images: [
             {
-                url: 'https://pandcjewellery.com/logo.png',
+                url: 'https://pandcjewellery.qzz.io/logo.png',
                 width: 1200,
                 height: 630,
                 alt: 'P&C Jewellery'
@@ -40,7 +40,7 @@ export const metadata = {
         }
     },
     alternates: {
-        canonical: 'https://pandcjewellery.com'
+        canonical: 'https://pandcjewellery.qzz.io'
     }
 };
 
