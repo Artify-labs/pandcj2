@@ -140,21 +140,6 @@ export default function AdminBanner() {
     })
   }
 
-  const handleSave = async () => {
-    try {
-      setLoading(true)
-      console.log('[AdminBanner] Saving:', settings)
-      const res = await fetch('/api/admin/banner', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
-      const json = await res.json()
-      console.log('[AdminBanner] Save response:', json)
-      if (!res.ok) throw new Error('Failed')
-      toast.success('Saved')
-    } catch (err) {
-      toast.error('Save failed')
-      console.error(err)
-    } finally { setLoading(false) }
-  }
-
   const onFileChange = async (e, path) => {
     const file = e.target.files?.[0]
     if (!file) return
