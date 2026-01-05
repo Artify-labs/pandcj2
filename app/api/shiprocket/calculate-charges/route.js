@@ -132,14 +132,20 @@ export async function POST(req) {
         const bestRate = couriers[0]
         console.log('[Shiprocket] 📊 Best rate object keys:', Object.keys(bestRate))
         console.log('[Shiprocket] 📊 Best rate full:', JSON.stringify(bestRate, null, 2))
+        console.log('[Shiprocket] 🔍 Debugging rates:')
+        console.log('  - rate:', bestRate.rate)
+        console.log('  - rating:', bestRate.rating)
+        console.log('  - freight_charge:', bestRate.freight_charge)
+        console.log('  - total_charge:', bestRate.total_charge)
+        console.log('  - charges:', bestRate.charges)
+        console.log('  - weightage_charge:', bestRate.weightage_charge)
         
-        // Try multiple field names for the rate
+        // Use total_charge (NOT rate which is per-kg)
         const shippingCharge = Number(
-          bestRate.rate || 
-          bestRate.rating || 
-          bestRate.freight_charge || 
           bestRate.total_charge || 
+          bestRate.freight_charge || 
           bestRate.charges || 
+          bestRate.rate || 
           0
         )
         const estimatedDays = Number(bestRate.estimated_delivery_days || bestRate.delivery_days || 3)
