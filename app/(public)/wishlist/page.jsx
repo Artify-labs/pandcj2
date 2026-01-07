@@ -1,3 +1,4 @@
+'use client'
 import PageTitle from '@/components/PageTitle'
 import Image from 'next/image'
 import { useSelector, useDispatch } from 'react-redux'
@@ -5,17 +6,6 @@ import { addToCart } from '@/lib/features/cart/cartSlice'
 import { removeFromWishlist } from '@/lib/features/wishlist/wishlistSlice'
 import { Trash2Icon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-
-export const metadata = {
-    robots: {
-        index: false,
-        follow: false,
-        googleBot: {
-            index: false,
-            follow: false,
-        }
-    }
-};
 
 export default function WishlistPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'

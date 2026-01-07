@@ -1,26 +1,11 @@
+'use client'
 import { Suspense } from "react"
 import ProductCard from "@/components/ProductCard"
 import { MoveLeftIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
 
-export const metadata = {
-    title: "Shop All Jewelry | P&C Jewellery - Earrings, Necklaces & More",
-    description: "Browse our complete collection of premium jewelry. Find exquisite earrings, necklaces, and accessories. Free worldwide shipping on all orders.",
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-        }
-    },
-    alternates: {
-        canonical: 'https://pandcjewellery.com/shop'
-    }
-};
-
- function ShopContent() {
+function ShopContent() {
 
     // get query params ?search=abc
     const searchParams = useSearchParams()

@@ -1,3 +1,4 @@
+'use client'
 import Counter from "@/components/Counter";
 import OrderSummary from "@/components/OrderSummary";
 import PageTitle from "@/components/PageTitle";
@@ -9,17 +10,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import { removeFromWishlist } from '@/lib/features/wishlist/wishlistSlice'
 import { toast } from 'react-hot-toast'
-
-export const metadata = {
-    robots: {
-        index: false,
-        follow: false,
-        googleBot: {
-            index: false,
-            follow: false,
-        }
-    }
-};
 
 export default function Cart() {
 
