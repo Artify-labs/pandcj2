@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.MONGODB_DB || process.env.DB_NAME || 'pandc';
-const DOMAIN = 'https://pandcjewellery.qzz.io';
+const DOMAIN = 'https://pandcjewellery.com';
 
 // Helper function to escape XML special characters
 function escapeXml(unsafe) {

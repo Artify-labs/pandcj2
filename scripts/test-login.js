@@ -1,6 +1,6 @@
 (async () => {
   try {
-    const url = 'http://pandcjewellery.qzz.io/api/auth/login'
+    const url = 'http://pandcjewellery.com/api/auth/login'
     const payload = { email: 'pandcjewellery@gmail.com', password: 'preetb121106' }
     const fetchFn = global.fetch || (await import('node-fetch')).default
     const res = await fetchFn(url, {
