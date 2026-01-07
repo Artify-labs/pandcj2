@@ -42,7 +42,7 @@ const Navbar = () => {
 
                     <Link href="/" className="relative text-4xl font-semibold flex items-center gap-3">
                         
-                        <span className="text-2xl font-semibold"><span className="text-yellow-600">P&C</span><span className="text-cyan-500">Jewellery</span><span className="text-yellow-600 text-4xl leading-0">.</span></span>
+                        <span className="text-2xl font-semibold"><span className="text-yellow-600">P&C</span><span className="text-slate-500">Jewellery</span><span className="text-yellow-600 text-4xl leading-0">.</span></span>
                     </Link>
 
                     {/* Desktop Menu */}
