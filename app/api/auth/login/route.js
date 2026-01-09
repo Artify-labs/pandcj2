@@ -23,7 +23,7 @@ function verifyPassword(stored, provided) {
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { email, password } = body || {}
+    const { email, password, role } = body || {}
     if (!email || !password) return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400 })
 
     const { db, client } = await getDb()
@@ -34,6 +34,45 @@ export async function POST(req) {
 
       // expect password stored as { salt, hash }
       if (!verifyPassword(user.password, password)) return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
+
+      // Check if admin login and user is not admin
+      if (role === 'ADMIN' && user.role !== 'ADMIN') {
+        return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403 })
+      }
+
+      // Handle admin login differently
+      if (role === 'ADMIN' && user.role === 'ADMIN') {
+        const token = crypto.randomBytes(32).toString('hex')
+        const sessions = db.collection('admin_sessions')
+        const now = new Date()
+        const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
+
+        await sessions.insertOne({
+          token,
+          userId: user.id || user._id,
+          createdAt: now,
+          expiresAt: expires
+        })
+
+        // Set admin session cookie
+        const cookie = `pandc_admin_token=${token}; Path=/; HttpOnly; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            user: {
+              id: user.id || user._id,
+              email: user.email,
+              fullName: user.fullName || '',
+              role: 'ADMIN'
+            }
+          }),
+          {
+            status: 200,
+            headers: { 'Set-Cookie': cookie }
+          }
+        )
+      }
 
       // Create session token for regular users
       const token = crypto.randomBytes(32).toString('hex')
