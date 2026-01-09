@@ -12,14 +12,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/me')
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
         if (res.ok) {
           const userData = await res.json()
           setUser(userData)
           setIsSignedIn(true)
         }
       } catch (err) {
-        // User not logged in
+        console.error('Auth check error:', err)
       } finally {
         setIsLoading(false)
       }
@@ -32,7 +34,8 @@ export function AuthProvider({ children }) {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
+      credentials: 'include'
     })
 
     if (!res.ok) {
@@ -50,7 +53,8 @@ export function AuthProvider({ children }) {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, fullName })
+      body: JSON.stringify({ email, password, fullName }),
+      credentials: 'include'
     })
 
     if (!res.ok) {
@@ -66,7 +70,10 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      })
     } catch (err) {
       console.error('Logout error:', err)
     } finally {
