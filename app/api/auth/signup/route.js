@@ -10,32 +10,49 @@ async function getDb() {
   return { db: client.db(dbName), client }
 }
 
-function verifyPassword(stored, provided) {
-  try {
-    if (!stored || !stored.salt || !stored.hash) return false
-    const derived = crypto.scryptSync(provided, stored.salt, 64).toString('hex')
-    return crypto.timingSafeEqual(Buffer.from(derived, 'hex'), Buffer.from(stored.hash, 'hex'))
-  } catch (e) {
-    return false
-  }
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex')
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex')
+  return { salt, hash }
 }
 
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { email, password } = body || {}
-    if (!email || !password) return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400 })
+    const { email, password, fullName } = body || {}
+
+    if (!email || !password) {
+      return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400 })
+    }
+
+    if (password.length < 6) {
+      return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), { status: 400 })
+    }
 
     const { db, client } = await getDb()
     try {
       const users = db.collection('users')
-      const user = await users.findOne({ email: String(email).toLowerCase() })
-      if (!user) return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
+      const existingUser = await users.findOne({ email: String(email).toLowerCase() })
 
-      // expect password stored as { salt, hash }
-      if (!verifyPassword(user.password, password)) return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
+      if (existingUser) {
+        return new Response(JSON.stringify({ error: 'User already exists' }), { status: 409 })
+      }
 
-      // Create session token for regular users
+      const passwordHash = hashPassword(password)
+      const userId = new Date().getTime().toString()
+
+      const newUser = {
+        id: userId,
+        email: String(email).toLowerCase(),
+        password: passwordHash,
+        fullName: fullName || '',
+        createdAt: new Date(),
+        role: 'USER'
+      }
+
+      const result = await users.insertOne(newUser)
+
+      // Create session token
       const token = crypto.randomBytes(32).toString('hex')
       const sessions = db.collection('user_sessions')
       const now = new Date()
@@ -43,7 +60,7 @@ export async function POST(req) {
 
       await sessions.insertOne({
         token,
-        userId: user.id || user._id,
+        userId: userId,
         createdAt: now,
         expiresAt: expires
       })
@@ -55,13 +72,13 @@ export async function POST(req) {
         JSON.stringify({
           ok: true,
           user: {
-            id: user.id || user._id,
-            email: user.email,
-            fullName: user.fullName || ''
+            id: userId,
+            email: newUser.email,
+            fullName: newUser.fullName
           }
         }),
         {
-          status: 200,
+          status: 201,
           headers: { 'Set-Cookie': cookie }
         }
       )
@@ -71,11 +88,10 @@ export async function POST(req) {
       } catch (e) {}
     }
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message || 'Login failed' }), { status: 500 })
+    return new Response(JSON.stringify({ error: err.message || 'Signup failed' }), { status: 500 })
   }
 }
 
 export async function GET() {
   return new Response(JSON.stringify({ message: 'POST only' }), { status: 405 })
 }
-

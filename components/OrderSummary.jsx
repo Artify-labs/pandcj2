@@ -1,12 +1,12 @@
 'use client'
 import { PlusIcon, SquarePenIcon, XIcon } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react'
-import { useUser } from '@clerk/nextjs'
 import AddressModal from './AddressModal';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '@/lib/features/cart/cartSlice'
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/providers/AuthProvider'
 
 const OrderSummary = ({ totalPrice, items }) => {
 
@@ -23,12 +23,16 @@ const OrderSummary = ({ totalPrice, items }) => {
     const [couponCodeInput, setCouponCodeInput] = useState('');
     const [coupon, setCoupon] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const { isSignedIn, user } = useUser();
+    const { isSignedIn, user } = useAuth();
     const dispatch = useDispatch();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [shippingCharge, setShippingCharge] = useState(0);
     const [estimatedDays, setEstimatedDays] = useState(null);
     const [loadingShipping, setLoadingShipping] = useState(false);
+
+    useEffect(() => {
+        setIsAuthenticated(isSignedIn);
+    }, [isSignedIn]);
 
     const handleCouponCode = async (event) => {
         event.preventDefault();
@@ -199,7 +203,7 @@ const OrderSummary = ({ totalPrice, items }) => {
                 },
                 prefill: {
                     name: selectedAddress.name || '',
-                    email: (user && user.primaryEmailAddress && user.primaryEmailAddress.email) || '',
+                    email: (user && (user.email || (user.primaryEmailAddress && user.primaryEmailAddress.email))) || '',
                     contact: selectedAddress.phone || ''
                 },
                 theme: { color: '#2563eb' }

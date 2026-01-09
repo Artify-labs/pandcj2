@@ -2,8 +2,8 @@ import { Toaster } from "react-hot-toast";
 import StoreProvider from "@/app/StoreProvider";
 import ProductsLoader from '@/components/ProductsLoader'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import { AuthProvider } from '@/app/providers/AuthProvider'
 import "./globals.css";
-import { ClerkProvider } from '@clerk/nextjs'
 import { assets } from '@/assets/assets'
 
 export const metadata = {
@@ -56,13 +56,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 {/* End Google Tag Manager (noscript) */}
                 
                 <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
-                <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+                <AuthProvider>
                     <StoreProvider>
                         <Toaster />
                         <ProductsLoader />
                         {children}
                     </StoreProvider>
-                </ClerkProvider>
+                </AuthProvider>
             </body>
         </html>
     );

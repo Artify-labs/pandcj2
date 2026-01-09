@@ -1,17 +1,18 @@
 'use client'
-import { Search, ShoppingCart, Heart, Package, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, Heart, Package, Menu, X, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from 'next/image'
 import { assets } from '@/assets/assets'
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { UserButton, SignedIn, SignedOut, useAuth } from '@clerk/nextjs'
+import { useAuth } from '@/app/providers/AuthProvider'
+import toast from 'react-hot-toast'
 
 const Navbar = () => {
 
     const router = useRouter();
-    const { isSignedIn } = useAuth()
+    const { isSignedIn, user, logout } = useAuth()
 
     const [search, setSearch] = useState('')
     const cartCount = useSelector(state => state.cart.total)
@@ -31,6 +32,13 @@ const Navbar = () => {
     const handleSearch = (e) => {
         e.preventDefault()
         router.push(`/shop?search=${search}`)
+    }
+
+    const handleLogout = async () => {
+        await logout()
+        toast.success('Logged out successfully')
+        router.push('/')
+        setMobileOpen(false)
     }
 
     const navBgClass = scrolled ? 'bg-white text-slate-700 shadow-md' : 'bg-transparent text-white'
@@ -67,16 +75,25 @@ const Navbar = () => {
                             
                             <button className="absolute -top-1 left-3 text-[8px] text-white bg-rose-500 size-3.5 rounded-full">{wishlistCount}</button>
                         </Link>
-                        <SignedIn>
-                            <UserButton afterSignOutUrl="/" />
-                        </SignedIn>
-                        <SignedOut>
-                            {mounted && (
-                                <button onClick={() => router.push('/sign-in')} className={`${scrolled ? 'px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white' : 'px-6 py-2 bg-white text-indigo-600 hover:bg-gray-100'} transition rounded-full font-medium text-sm`}>
-                                    Login
-                                </button>
-                            )}
-                        </SignedOut>
+                        {mounted && (
+                            <>
+                                {isSignedIn && user ? (
+                                    <div className="flex items-center gap-4">
+                                        <span className={`text-sm ${scrolled ? 'text-slate-600' : 'text-white'}`}>{user.fullName || user.email}</span>
+                                        <button 
+                                            onClick={handleLogout}
+                                            className={`${scrolled ? 'px-6 py-2 bg-red-500 hover:bg-red-600 text-white' : 'px-6 py-2 bg-white text-red-500 hover:bg-gray-100'} transition rounded-full font-medium text-sm`}
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => router.push('/sign-in')} className={`${scrolled ? 'px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white' : 'px-6 py-2 bg-white text-indigo-600 hover:bg-gray-100'} transition rounded-full font-medium text-sm`}>
+                                        Login
+                                    </button>
+                                )}
+                            </>
+                        )}
 
                     </div>
 
@@ -112,16 +129,29 @@ const Navbar = () => {
                             <Link href="/about" onClick={() => setMobileOpen(false)} className="text-base font-medium hover:text-yellow-600 transition">About</Link>
                         </nav>
 
-                        <form onSubmit={handleSearch} className="mt-6">
-                            <div className="flex items-center gap-2 border rounded-full px-3 py-2">
-                                <Search size={16} />
-                                <input className="w-full outline-none" type="text" placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} />
-                                <button type="submit" className="text-sm px-3 py-1 bg-yellow-600 text-white rounded">Search</button>
-                            </div>
-                        </form>
-
-                        <div className="mt-6 pt-4 border-t">
-                            <SignedIn>
+                        <for{mounted && (
+                                <>
+                                    {isSignedIn && user ? (
+                                        <div className="space-y-3">
+                                            <div className="px-3 py-2 bg-slate-100 rounded text-sm">
+                                                <p className="font-medium text-slate-900">{user.fullName || user.email}</p>
+                                                <p className="text-xs text-slate-600">{user.email}</p>
+                                            </div>
+                                            <button 
+                                                onClick={handleLogout}
+                                                className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                                            >
+                                                <LogOut size={16} />
+                                                Logout
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => router.push('/sign-in')} className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
+                                            Login
+                                        </button>
+                                    )}
+                                </>
+                            )}
                                 <UserButton afterSignOutUrl="/" />
                             </SignedIn>
                             <SignedOut>

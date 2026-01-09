@@ -2,10 +2,10 @@
 import PageTitle from "@/components/PageTitle"
 import { useState, useEffect } from "react";
 import OrderItem from "@/components/OrderItem";
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from '@/app/providers/AuthProvider'
 
 export default function Orders() {
-    const { isSignedIn, user } = useUser()
+    const { isSignedIn, user } = useAuth()
     const [orders, setOrders] = useState([])
 
     useEffect(() => {
