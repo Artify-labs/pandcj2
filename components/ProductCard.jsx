@@ -83,25 +83,6 @@ const ProductCard = ({ product }) => {
         toast.success('Added to cart!')
     }
 
-    const handleBuyNow = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        
-        dispatch(addToCart({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.images?.[0],
-            product: product,
-            quantity: 1
-        }))
-        
-        toast.success('Added to cart!')
-        setTimeout(() => {
-            router.push('/cart')
-        }, 500)
-    }
-
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
     const originalPrice = product.originalPrice || product.mrp
     const discountPercent = originalPrice ? Math.round(((originalPrice - product.price) / originalPrice) * 100) : 0
@@ -138,15 +119,7 @@ const ProductCard = ({ product }) => {
                                 <span className='text-xs sm:text-sm font-medium text-green-600'>Save {discountPercent}%</span>
                             )}
                         </div>
-                        {/* Buy Now Button - Mobile only */}
-                        <button
-                            onClick={handleBuyNow}
-                            disabled={product.inStock === false || product.stock === 'out_of_stock'}
-                            className='sm:hidden w-full mt-2 flex items-center justify-center gap-2 bg-slate-800 text-white text-xs font-medium py-2 px-3 rounded hover:bg-slate-900 active:scale-95 transition-all disabled:bg-slate-300 disabled:cursor-not-allowed'
-                        >
-                            <ShoppingCartIcon size={14} />
-                            Buy Now
-                        </button>
+                        {/* Removed Buy Now button - using Add to Cart button instead */}
                     </div>
                 </Link>
 
