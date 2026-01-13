@@ -168,8 +168,8 @@ const Hero = ({ initial = null }) => {
                     >
                         <Image className='w-24 sm:w-35 md:w-32 xl:w-24 order-first md:order-first xl:order-last' src={topRight.image} alt="" />
                         <div className='mt-4 sm:mt-4 md:mt-4 xl:mt-0 ml-4 sm:ml-0'>
-                            <p className='text-xl sm:text-2xl md:text-3xl font-medium text-black max-w-40'>{topRight.title}</p>
-                            <p className='flex items-center gap-1 mt-2 sm:mt-4'><a href={topRight.link} className='flex items-center gap-1 text-black text-xs sm:text-sm'>View more <ArrowRightIcon className='group-hover:ml-2 transition-all' size={16} /></a> </p>
+                            <p className='text-2xl sm:text-2xl md:text-3xl font-medium text-black max-w-40'>{topRight.title}</p>
+                            <p className='flex items-center gap-1 mt-2 sm:mt-4'><a href={topRight.link} className='flex items-center gap-1 text-black text-sm sm:text-sm'>View more <ArrowRightIcon className='group-hover:ml-2 transition-all' size={16} /></a> </p>
                         </div>
                     </div>
                     <div
@@ -184,8 +184,8 @@ const Hero = ({ initial = null }) => {
                     >
                         <Image className='w-24 sm:w-35 md:w-32 xl:w-24 order-first md:order-first xl:order-last' src={bottomRight.image} alt="" />
                         <div className='mt-4 sm:mt-4 md:mt-4 xl:mt-0 ml-4 sm:ml-0'>
-                            <p className='text-xl sm:text-2xl md:text-3xl font-medium text-black max-w-40'>{bottomRight.title}</p>
-                            <p className='flex items-center gap-1 mt-2 sm:mt-4'><a href={bottomRight.link} className='flex items-center gap-1 text-black text-xs sm:text-sm'>View more <ArrowRightIcon className='group-hover:ml-2 transition-all' size={16} /></a> </p>
+                            <p className='text-2xl sm:text-2xl md:text-3xl font-medium text-black max-w-40'>{bottomRight.title}</p>
+                            <p className='flex items-center gap-1 mt-2 sm:mt-4'><a href={bottomRight.link} className='flex items-center gap-1 text-black text-sm sm:text-sm'>View more <ArrowRightIcon className='group-hover:ml-2 transition-all' size={16} /></a> </p>
                         </div>
                     </div>
                 </div>
