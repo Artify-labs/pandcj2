@@ -3,15 +3,16 @@ import { assets } from "@/assets/assets"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
-import { useAuth } from "@/app/providers/AuthProvider"
+import { useRouter } from "next/navigation"
 
 export default function StoreAddProduct() {
 
-    const { user } = useAuth()
+    const router = useRouter()
     const categories = ['Earrings', 'Necklace', 'Heavy Necklace', 'Fashionable Earrings', 'Others']
 
     const [images, setImages] = useState({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
     const [storeId, setStoreId] = useState(null)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [productInfo, setProductInfo] = useState({
         name: "",
         description: "",
@@ -22,40 +23,78 @@ export default function StoreAddProduct() {
     })
     const [loading, setLoading] = useState(false)
 
-    // Fetch user's store on component mount
+    // Check admin authentication on mount
     useEffect(() => {
-        const fetchStore = async () => {
+        const checkAuth = async () => {
             try {
-                console.log('[AddProduct] Fetching store...')
+                console.log('[AddProduct] Checking store authentication...')
                 const authToken = localStorage.getItem('authToken')
-                console.log('[AddProduct] Auth token available:', !!authToken)
-                
-                const res = await fetch('/api/store', { 
+                if (!authToken) {
+                    console.log('[AddProduct] No auth token, redirecting to store login')
+                    toast.error('Please login to add products')
+                    setTimeout(() => {
+                        router.push('/store/login')
+                    }, 1000)
+                    return
+                }
+
+                console.log('[AddProduct] Auth token available, verifying...')
+                const res = await fetch('/api/auth/me', {
                     credentials: 'include',
                     headers: {
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': `Bearer ${authToken}`
                     }
                 })
-                
-                console.log('[AddProduct] Store API response status:', res.status)
-                
+
                 if (res.ok) {
-                    const store = await res.json()
-                    console.log('[AddProduct] Store fetched successfully:', store)
-                    setStoreId(store?.id || 'default-store')
+                    const user = await res.json()
+                    console.log('[AddProduct] User authenticated:', user.id)
+                    setIsAuthenticated(true)
+                    fetchStore(authToken)
                 } else {
-                    // Fallback to default store if no user store found
-                    console.warn('[AddProduct] Failed to fetch store, using default')
-                    setStoreId('default-store')
+                    console.log('[AddProduct] Auth verification failed, redirecting to login')
+                    toast.error('Session expired, please login again')
+                    localStorage.removeItem('authToken')
+                    setTimeout(() => {
+                        router.push('/store/login')
+                    }, 1000)
                 }
             } catch (err) {
-                console.error('[AddProduct] Failed to fetch store:', err)
-                // Fallback to default store
-                setStoreId('default-store')
+                console.error('[AddProduct] Auth check error:', err)
+                toast.error('Authentication error, please login again')
+                setTimeout(() => {
+                    router.push('/store/login')
+                }, 1000)
             }
         }
-        fetchStore()
-    }, [user])
+
+        checkAuth()
+    }, [router])
+
+    // Fetch user's store
+    const fetchStore = async (token) => {
+        try {
+            console.log('[AddProduct] Fetching store...')
+            const res = await fetch('/api/store', { 
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            
+            if (res.ok) {
+                const store = await res.json()
+                console.log('[AddProduct] Store fetched successfully:', store)
+                setStoreId(store?.id || 'default-store')
+            } else {
+                console.warn('[AddProduct] Failed to fetch store')
+                setStoreId('default-store')
+            }
+        } catch (err) {
+            console.error('[AddProduct] Failed to fetch store:', err)
+            setStoreId('default-store')
+        }
+    }
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
