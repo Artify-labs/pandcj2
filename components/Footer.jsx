@@ -27,8 +27,8 @@ const Footer = () => {
         {
             title: "CONTACT",
             links: [
-                { text: "+91 9804915374", path: '/', icon: PhoneIcon },
-                { text: "pandcjewellery@gmail.com", path: '/', icon: MailIcon },
+                { text: "+91 9804915374", path: 'tel:+919804915374', icon: PhoneIcon },
+                { text: "pandcjewellery@gmail.com", path: 'mailto:pandcjewellery@gmail.com', icon: MailIcon },
                 { text: "Noida, India", path: '/', icon: MapPinIcon }
             ]
         }
