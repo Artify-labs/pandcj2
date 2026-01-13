@@ -1,17 +1,51 @@
 import { getSessionUser } from '@/lib/auth'
+import { verifyToken } from '@/lib/auth'
+import mongodb from '@/lib/mongodb'
 
 export async function GET(req) {
   try {
-    const user = await getSessionUser()
+    // First try getSessionUser (cookie-based)
+    let user = await getSessionUser()
     
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Not authenticated', message: 'No valid session found' }), { status: 401 })
+    if (user) {
+      console.log('[/api/auth/me] User from session:', user.id)
+      return new Response(
+        JSON.stringify(user),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
-    return new Response(
-      JSON.stringify(user),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    )
+    // Fallback: Try to get from Authorization header (JWT token)
+    const authHeader = req.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7)
+        const decoded = verifyToken(token)
+        
+        if (decoded && decoded.userId) {
+          console.log('[/api/auth/me] User from JWT token:', decoded.userId)
+          // Fetch user from database
+          const users = await mongodb.user.findById(decoded.userId)
+          if (users) {
+            return new Response(
+              JSON.stringify({
+                id: users.id || users._id,
+                email: users.email,
+                fullName: users.fullName || '',
+                primaryEmailAddress: { email: users.email }
+              }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
+            )
+          }
+        }
+      } catch (tokenErr) {
+        console.log('[/api/auth/me] JWT verification failed:', tokenErr.message)
+      }
+    }
+
+    // No valid auth found
+    console.log('[/api/auth/me] No valid authentication found')
+    return new Response(JSON.stringify({ error: 'Not authenticated', message: 'No valid session found' }), { status: 401 })
   } catch (err) {
     console.error('[/api/auth/me] Error:', err)
     return new Response(JSON.stringify({ error: err.message || 'Failed to fetch user' }), { status: 500 })

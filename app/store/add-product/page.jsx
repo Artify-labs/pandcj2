@@ -63,6 +63,7 @@ export default function StoreAddProduct() {
 
     const onSubmitHandler = async (e) => {
         e.preventDefault()
+        const loadingToast = toast.loading('Adding Product...')
         try {
             setLoading(true)
 
@@ -130,23 +131,27 @@ export default function StoreAddProduct() {
             }
             const created = await res.json()
             console.log('[AddProduct] Product created:', created)
+            toast.dismiss(loadingToast)
             toast.success('Product added successfully!')
             // reset form
             setProductInfo({ name: '', description: '', mrp: 0, price: 0, category: '', stock: 'in_stock' })
             setImages({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
         } catch (err) {
-            if (err.name !== 'AbortError') {
-                console.error('Product creation error:', err)
-                throw new Error(err.message || 'Could not add product')
+            console.error('[AddProduct] Error:', err)
+            toast.dismiss(loadingToast)
+            if (err.name === 'AbortError') {
+                toast.error('Request timeout - please try again')
+            } else {
+                toast.error(err.message || 'Could not add product')
             }
-            throw new Error('Request timeout - please try again')
-        } finally { setLoading(false) }
-        
+        } finally { 
+            setLoading(false) 
+        }
     }
 
 
     return (
-        <form onSubmit={e => toast.promise(onSubmitHandler(e), { loading: "Adding Product..." })} className="text-slate-500 mb-28 p-4 sm:p-0">
+        <form onSubmit={onSubmitHandler} className="text-slate-500 mb-28 p-4 sm:p-0">
             <h1 className="text-xl sm:text-2xl">Add New <span className="text-slate-800 font-medium">Products</span></h1>
             <p className="mt-5 sm:mt-7 text-sm sm:text-base">Product Images</p>
 
