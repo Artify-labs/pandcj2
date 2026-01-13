@@ -3,9 +3,11 @@ import { assets } from "@/assets/assets"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
+import { useAuth } from "@/app/providers/AuthProvider"
 
 export default function StoreAddProduct() {
 
+    const { user } = useAuth()
     const categories = ['Earrings', 'Necklace', 'Heavy Necklace', 'Fashionable Earrings', 'Others']
 
     const [images, setImages] = useState({ 1: { file: null, preview: null }, 2: { file: null, preview: null }, 3: { file: null, preview: null }, 4: { file: null, preview: null } })
@@ -24,22 +26,36 @@ export default function StoreAddProduct() {
     useEffect(() => {
         const fetchStore = async () => {
             try {
-                const res = await fetch('/api/store', { credentials: 'include' })
+                console.log('[AddProduct] Fetching store...')
+                const authToken = localStorage.getItem('authToken')
+                console.log('[AddProduct] Auth token available:', !!authToken)
+                
+                const res = await fetch('/api/store', { 
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                    }
+                })
+                
+                console.log('[AddProduct] Store API response status:', res.status)
+                
                 if (res.ok) {
                     const store = await res.json()
+                    console.log('[AddProduct] Store fetched successfully:', store)
                     setStoreId(store?.id || 'default-store')
                 } else {
                     // Fallback to default store if no user store found
+                    console.warn('[AddProduct] Failed to fetch store, using default')
                     setStoreId('default-store')
                 }
             } catch (err) {
-                console.error('Failed to fetch store:', err)
+                console.error('[AddProduct] Failed to fetch store:', err)
                 // Fallback to default store
                 setStoreId('default-store')
             }
         }
         fetchStore()
-    }, [])
+    }, [user])
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
@@ -98,15 +114,22 @@ export default function StoreAddProduct() {
                 storeId: storeId
             }
 
+            console.log('[AddProduct] Sending payload:', payload)
+
             const controller2 = new AbortController()
             const timeout2 = setTimeout(() => controller2.abort(), 4000) // 4s timeout
             const res = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller2.signal })
             clearTimeout(timeout2)
+            
+            console.log('[AddProduct] Response status:', res.status)
+            
             if (!res.ok) {
                 const errorData = await res.json()
+                console.error('[AddProduct] Error response:', errorData)
                 throw new Error(errorData?.error || 'Failed to create product')
             }
             const created = await res.json()
+            console.log('[AddProduct] Product created:', created)
             toast.success('Product added successfully!')
             // reset form
             setProductInfo({ name: '', description: '', mrp: 0, price: 0, category: '', stock: 'in_stock' })
