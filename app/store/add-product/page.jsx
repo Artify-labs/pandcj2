@@ -157,7 +157,7 @@ export default function StoreAddProduct() {
             console.log('[AddProduct] Sending payload:', payload)
 
             const controller2 = new AbortController()
-            const timeout2 = setTimeout(() => controller2.abort(), 30000) // 30s timeout
+            const timeout2 = setTimeout(() => controller2.abort(), 60000) // 60s timeout (Vercel limit is 300s)
             const res = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller2.signal })
             clearTimeout(timeout2)
             

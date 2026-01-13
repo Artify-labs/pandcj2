@@ -1,5 +1,8 @@
 import { MongoClient } from 'mongodb'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 
 async function getDb() {
   const uri = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
@@ -40,27 +43,26 @@ export async function POST(req) {
         return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403 })
       }
 
-      // Handle admin login differently
+      // Create JWT token for both admin and regular users
+      const jwtToken = jwt.sign(
+        { 
+          userId: user.id || user._id, 
+          email: user.email,
+          role: user.role || 'USER'
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      )
+
+      // Handle admin login
       if (role === 'ADMIN' && user.role === 'ADMIN') {
-        const token = crypto.randomBytes(32).toString('hex')
-        const sessions = db.collection('admin_sessions')
-        const now = new Date()
-        const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
-
-        await sessions.insertOne({
-          token,
-          userId: user.id || user._id,
-          createdAt: now,
-          expiresAt: expires
-        })
-
         // Set admin session cookie
-        const cookie = `pandc_admin_token=${token}; Path=/; HttpOnly; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+        const cookie = `pandc_admin_token=${jwtToken}; Path=/; HttpOnly; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
 
         return new Response(
           JSON.stringify({
             ok: true,
-            token: token,
+            token: jwtToken,
             user: {
               id: user.id || user._id,
               email: user.email,
@@ -75,26 +77,13 @@ export async function POST(req) {
         )
       }
 
-      // Create session token for regular users
-      const token = crypto.randomBytes(32).toString('hex')
-      const sessions = db.collection('user_sessions')
-      const now = new Date()
-      const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
-
-      await sessions.insertOne({
-        token,
-        userId: user.id || user._id,
-        createdAt: now,
-        expiresAt: expires
-      })
-
-      // Set session cookie
-      const cookie = `pandc_user_token=${token}; Path=/; HttpOnly; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+      // Regular user login
+      const cookie = `pandc_user_token=${jwtToken}; Path=/; HttpOnly; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
 
       return new Response(
         JSON.stringify({
           ok: true,
-          token: token,
+          token: jwtToken,
           user: {
             id: user.id || user._id,
             email: user.email,

@@ -1,16 +1,6 @@
-import { MongoClient } from 'mongodb';
+import { getMongoClient } from '@/lib/mongodb';
 
-const MONGO_URI = process.env.MONGODB_URI;
-const DB_NAME = process.env.DB_NAME || 'pandc';
-
-async function getClient() {
-  if (!MONGO_URI) throw new Error('MONGODB_URI not set');
-  if (global._mongoClient) return global._mongoClient;
-  const c = new MongoClient(MONGO_URI, { useUnifiedTopology: true });
-  await c.connect();
-  global._mongoClient = c;
-  return c;
-}
+const DB_NAME = process.env.MONGODB_DB || 'pandc';
 
 export async function GET(req) {
   try {
@@ -24,7 +14,7 @@ export async function GET(req) {
       );
     }
 
-    const client = await getClient();
+    const client = await getMongoClient();
     const db = client.db(DB_NAME);
     const ratingsCollection = db.collection('ratings');
 

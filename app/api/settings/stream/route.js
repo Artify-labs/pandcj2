@@ -5,10 +5,34 @@ const DB_NAME = process.env.MONGODB_DB || process.env.DB_NAME || process.env.NEX
 
 async function getClient() {
   if (!MONGO_URI) throw new Error('MONGODB_URI not set')
-  if (global._mongoClient) return global._mongoClient
-  const c = new MongoClient(MONGO_URI, { useUnifiedTopology: true })
+  
+  const globalForMongo = globalThis;
+  if (globalForMongo._mongoClient && globalForMongo._mongoClient.topology) {
+    try {
+      const pingPromise = globalForMongo._mongoClient.db('admin').command({ ping: 1 })
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Ping timeout')), 5000)
+      )
+      await Promise.race([pingPromise, timeoutPromise])
+      return globalForMongo._mongoClient
+    } catch (e) {
+      try {
+        await globalForMongo._mongoClient.close()
+      } catch {}
+      globalForMongo._mongoClient = null
+    }
+  }
+  
+  const c = new MongoClient(MONGO_URI, {
+    maxPoolSize: 10,
+    minPoolSize: 2,
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
+    retryWrites: true,
+  })
   await c.connect()
-  global._mongoClient = c
+  globalForMongo._mongoClient = c
   return c
 }
 
