@@ -79,22 +79,38 @@ export async function GET(req) {
     const pipeline = storeId ? [{ $match: { storeId } }] : []
     changeStream = coll.watch(pipeline, { fullDocument: 'updateLookup' })
 
+    // Track previous summary to avoid sending duplicate updates
+    let lastSummary = JSON.stringify(initial)
+    let debounceTimer = null
+
     // iterate change stream in background
     ;(async () => {
       try {
         for await (const change of changeStream) {
-          try {
-            const latest = await computeSummary(coll, storeId)
-            await send({ type: 'update', data: latest })
-          } catch (e) {
-            console.error('Compute summary error:', e)
-          }
+          // Debounce summary computation - only compute every 500ms
+          if (debounceTimer) clearTimeout(debounceTimer)
+          
+          debounceTimer = setTimeout(async () => {
+            try {
+              const latest = await computeSummary(coll, storeId)
+              const latestStr = JSON.stringify(latest)
+              
+              // Only send if summary actually changed
+              if (latestStr !== lastSummary) {
+                lastSummary = latestStr
+                await send({ type: 'update', data: latest })
+              }
+            } catch (e) {
+              console.error('Compute summary error:', e)
+            }
+          }, 500)
         }
       } catch (e) {
         if (!e.message.includes('Stream closed')) {
           console.error('Change stream error:', e)
         }
       } finally {
+        if (debounceTimer) clearTimeout(debounceTimer)
         try { 
           if (changeStream) await changeStream.close()
           if (writer) await writer.close() 

@@ -44,8 +44,16 @@ export default function AdminPageIntro() {
       }
     }
 
-    // Poll every 3 seconds for updates as fallback
-    pollInterval = setInterval(fetchLatest, 3000)
+    // Poll every 8 seconds for updates as fallback (slower when EventSource works)
+    // Stop polling if EventSource successfully connects
+    const pollWithBackoff = async () => {
+      await fetchLatest()
+      if (es && es.readyState === 1) {
+        // EventSource connected, stop polling
+        clearInterval(pollInterval)
+      }
+    }
+    pollInterval = setInterval(pollWithBackoff, 8000)
 
     try {
       es = new EventSource('/api/settings/stream?key=pageintro')

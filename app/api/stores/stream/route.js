@@ -53,21 +53,42 @@ export async function GET(req) {
     const pipeline = userId ? [{ $match: { userId } }] : []
     changeStream = coll.watch(pipeline, { fullDocument: 'updateLookup' })
 
+    // Track sent documents to avoid duplicate updates
+    const recentlyPublished = new Map() // documentId -> timestamp
+    const DEDUP_WINDOW = 2000 // 2 second window
+
     // Background listener
     ;(async () => {
       try {
         for await (const change of changeStream) {
+          const docId = change.documentKey._id.toString()
+          const now = Date.now()
+          
+          // Check if we recently sent this document
+          const lastSent = recentlyPublished.get(docId)
+          if (lastSent && now - lastSent < DEDUP_WINDOW) {
+            continue // Skip duplicate update
+          }
+          
           await send({ 
             type: 'store_' + change.operationType, 
             document: change.fullDocument,
             documentKey: change.documentKey
           })
+          
+          recentlyPublished.set(docId, now)
+          
+          // Clean up old entries
+          for (const [id, timestamp] of recentlyPublished.entries()) {
+            if (now - timestamp > DEDUP_WINDOW) recentlyPublished.delete(id)
+          }
         }
       } catch (e) {
         if (!e.message.includes('Stream closed')) {
           console.error('Change stream error:', e)
         }
       } finally {
+        recentlyPublished.clear()
         try { 
           if (changeStream) await changeStream.close()
           if (writer) await writer.close() 

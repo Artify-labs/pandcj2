@@ -96,8 +96,16 @@ export default function AdminBanner() {
       }
     }
 
-    // Poll every 5 seconds for updates as fallback - but only if no unsaved changes
-    pollInterval = setInterval(fetchLatest, 5000)
+    // Poll every 10 seconds for updates as fallback - but only if no unsaved changes
+    // Stop polling if EventSource successfully connects
+    const pollWithBackoff = async () => {
+      await fetchLatest()
+      if (es && es.readyState === 1) {
+        // EventSource connected, stop polling
+        clearInterval(pollInterval)
+      }
+    }
+    pollInterval = setInterval(pollWithBackoff, 10000)
 
     try {
       es = new EventSource('/api/settings/stream?key=banner')
