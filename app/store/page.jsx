@@ -57,7 +57,7 @@ export default function Dashboard() {
             const totalEarnings = visibleOrders.reduce((s, o) => s + (Number(o.total) || 0), 0)
 
             setDashboardData({
-                totalProducts: (products || []).filter(p => (p.storeId || 'default-store') === storeId).length,
+                totalProducts: (products || []).length,
                 totalEarnings,
                 totalOrders: visibleOrders.length,
                 ratings: [],
