@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images:{
+    output: 'standalone', // Add this for optimized server deployment
+    images: {
         unoptimized: true
     },
     async redirects() {
         return [
-            // Redirect www to non-www (clean domain)
             {
                 source: '/:path*',
                 destination: 'https://pandcjewellery.com/:path*',
