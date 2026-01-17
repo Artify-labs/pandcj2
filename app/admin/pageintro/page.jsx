@@ -12,6 +12,7 @@ export default function AdminPageIntro() {
   const hasUnsavedChangesRef = React.useRef(false)
 
   useEffect(() => {
+    // Initial load
     fetch('/api/admin/pageintro?ts=' + Date.now(), { credentials: 'include' }).then(r => r.json()).then(data => {
       if (data) {
         setTitle(data.title || '')
@@ -19,65 +20,19 @@ export default function AdminPageIntro() {
       }
     }).catch(() => {})
 
-    // Set up EventSource for real-time updates
+    // Set up EventSource for real-time updates - event-driven only, no polling
     let mounted = true
     let es
-    let esTimeout
-    let pollInterval
-
-    const fetchLatest = async () => {
-      try {
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout
-        const res = await fetch(`/api/admin/pageintro?ts=${Date.now()}`, { credentials: 'include', signal: controller.signal })
-        clearTimeout(timeout)
-        if (res.ok) {
-          const data = await res.json()
-          if (mounted && data && !hasUnsavedChangesRef.current) {
-            console.log('[AdminPageIntro] Poll fetched:', data)
-            setTitle(data.title || '')
-            setImage(data.image || '')
-          }
-        }
-      } catch (e) {
-        if (e.name !== 'AbortError') console.error('[AdminPageIntro] Poll error:', e)
-      }
-    }
-
-    // Poll every 8 seconds for updates as fallback (slower when EventSource works)
-    // Stop polling if EventSource successfully connects
-    const pollWithBackoff = async () => {
-      await fetchLatest()
-      if (es && es.readyState === 1) {
-        // EventSource connected, stop polling
-        clearInterval(pollInterval)
-      }
-    }
-    pollInterval = setInterval(pollWithBackoff, 8000)
 
     try {
       es = new EventSource('/api/settings/stream?key=pageintro')
       console.log('[AdminPageIntro] EventSource connected')
       
-      // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
-      esTimeout = setTimeout(() => {
-        console.warn('[AdminPageIntro] EventSource timeout (3s), closing and relying on polling')
-        if (es) {
-          es.close()
-          es = null
-        }
-      }, 3000)
-      
       es.addEventListener('update', (ev) => {
         try {
-          // Clear timeout once we get a message
-          if (esTimeout) {
-            clearTimeout(esTimeout)
-            esTimeout = null
-          }
           const msg = JSON.parse(ev.data)
           console.log('[AdminPageIntro] EventSource update received:', msg)
-          if (mounted && msg && msg.data) {
+          if (mounted && msg && msg.data && !hasUnsavedChangesRef.current) {
             setTitle(msg.data.title || '')
             setImage(msg.data.image || '')
           }
@@ -87,12 +42,11 @@ export default function AdminPageIntro() {
       })
 
       es.onerror = () => {
-        console.error('[AdminPageIntro] EventSource error, closing connection and relying on polling')
+        console.error('[AdminPageIntro] EventSource error')
         if (es) {
           es.close()
           es = null
         }
-        if (esTimeout) clearTimeout(esTimeout)
       }
     } catch (e) {
       console.error('[AdminPageIntro] EventSource setup error:', e)
@@ -101,7 +55,6 @@ export default function AdminPageIntro() {
     return () => {
       mounted = false
       if (es) es.close()
-      if (pollInterval) clearInterval(pollInterval)
     }
   }, [])
 

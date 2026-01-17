@@ -65,68 +65,16 @@ export default function AdminBanner() {
   useEffect(() => { 
     fetchSettings()
 
-    // Set up EventSource for real-time updates - only when no unsaved changes
+    // Set up EventSource for real-time updates - event-driven only, no polling
     let mounted = true
     let es
-    let esTimeout
-    let pollInterval
-
-    const fetchLatest = async () => {
-      // Don't poll if user is actively editing
-      if (hasUnsavedChangesRef.current) return
-
-      try {
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout for polling
-        
-        const res = await fetch(`/api/admin/banner?ts=${Date.now()}`, { credentials: 'include', signal: controller.signal })
-        clearTimeout(timeout)
-        
-        if (res.ok) {
-          const data = await res.json()
-          if (mounted && data && !hasUnsavedChangesRef.current) {
-            console.log('[AdminBanner] Poll fetched:', data)
-            setSettings(data)
-          }
-        }
-      } catch (e) {
-        if (e.name !== 'AbortError') {
-          console.error('[AdminBanner] Poll error:', e?.message || e)
-        }
-      }
-    }
-
-    // Poll every 10 seconds for updates as fallback - but only if no unsaved changes
-    // Stop polling if EventSource successfully connects
-    const pollWithBackoff = async () => {
-      await fetchLatest()
-      if (es && es.readyState === 1) {
-        // EventSource connected, stop polling
-        clearInterval(pollInterval)
-      }
-    }
-    pollInterval = setInterval(pollWithBackoff, 10000)
 
     try {
       es = new EventSource('/api/settings/stream?key=banner')
       console.log('[AdminBanner] EventSource connected')
       
-      // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
-      esTimeout = setTimeout(() => {
-        console.warn('[AdminBanner] EventSource timeout (3s), closing and relying on polling')
-        if (es) {
-          es.close()
-          es = null
-        }
-      }, 3000)
-      
       es.addEventListener('update', (ev) => {
         try {
-          // Clear timeout once we get a message
-          if (esTimeout) {
-            clearTimeout(esTimeout)
-            esTimeout = null
-          }
           const msg = JSON.parse(ev.data)
           console.log('[AdminBanner] EventSource update received:', msg)
           // Only update if no unsaved changes
@@ -139,12 +87,11 @@ export default function AdminBanner() {
       })
 
       es.onerror = () => {
-        console.error('[AdminBanner] EventSource error, closing connection and relying on polling')
+        console.error('[AdminBanner] EventSource error')
         if (es) {
           es.close()
           es = null
         }
-        if (esTimeout) clearTimeout(esTimeout)
       }
     } catch (e) {
       console.error('[AdminBanner] EventSource setup error:', e)
@@ -153,8 +100,6 @@ export default function AdminBanner() {
     return () => {
       mounted = false
       if (es) es.close()
-      if (esTimeout) clearTimeout(esTimeout)
-      if (pollInterval) clearInterval(pollInterval)
     }
   }, [])
 
