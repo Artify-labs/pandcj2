@@ -19,43 +19,6 @@ export default function AdminPageIntro() {
         setImage(data.image || '')
       }
     }).catch(() => {})
-
-    // Set up EventSource for real-time updates - event-driven only, no polling
-    let mounted = true
-    let es
-
-    try {
-      es = new EventSource('/api/settings/stream?key=pageintro')
-      console.log('[AdminPageIntro] EventSource connected')
-      
-      es.addEventListener('update', (ev) => {
-        try {
-          const msg = JSON.parse(ev.data)
-          console.log('[AdminPageIntro] EventSource update received:', msg)
-          if (mounted && msg && msg.data && !hasUnsavedChangesRef.current) {
-            setTitle(msg.data.title || '')
-            setImage(msg.data.image || '')
-          }
-        } catch (e) {
-          console.error('[AdminPageIntro] Parse error:', e)
-        }
-      })
-
-      es.onerror = () => {
-        console.error('[AdminPageIntro] EventSource error')
-        if (es) {
-          es.close()
-          es = null
-        }
-      }
-    } catch (e) {
-      console.error('[AdminPageIntro] EventSource setup error:', e)
-    }
-
-    return () => {
-      mounted = false
-      if (es) es.close()
-    }
   }, [])
 
   async function handleUpload(e) {

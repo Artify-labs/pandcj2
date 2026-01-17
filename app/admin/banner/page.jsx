@@ -64,43 +64,6 @@ export default function AdminBanner() {
 
   useEffect(() => { 
     fetchSettings()
-
-    // Set up EventSource for real-time updates - event-driven only, no polling
-    let mounted = true
-    let es
-
-    try {
-      es = new EventSource('/api/settings/stream?key=banner')
-      console.log('[AdminBanner] EventSource connected')
-      
-      es.addEventListener('update', (ev) => {
-        try {
-          const msg = JSON.parse(ev.data)
-          console.log('[AdminBanner] EventSource update received:', msg)
-          // Only update if no unsaved changes
-          if (mounted && msg && msg.data && !hasUnsavedChangesRef.current) {
-            setSettings(msg.data)
-          }
-        } catch (e) {
-          console.error('[AdminBanner] Parse error:', e)
-        }
-      })
-
-      es.onerror = () => {
-        console.error('[AdminBanner] EventSource error')
-        if (es) {
-          es.close()
-          es = null
-        }
-      }
-    } catch (e) {
-      console.error('[AdminBanner] EventSource setup error:', e)
-    }
-
-    return () => {
-      mounted = false
-      if (es) es.close()
-    }
   }, [])
 
   const handleFile = async (file) => {

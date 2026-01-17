@@ -78,45 +78,6 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchDashboardData()
-        // subscribe to realtime updates
-        let es
-        try {
-            es = new EventSource('/api/orders/stream')
-            es.addEventListener('summary', (ev) => {
-                try {
-                    const msg = JSON.parse(ev.data)
-                    if (msg && msg.data) {
-                        setDashboardData(prev => ({ ...prev, revenue: msg.data.totalAmount, orders: msg.data.totalOrders, cancelled: msg.data.cancelled }))
-                    }
-                } catch (e) { }
-            })
-        } catch (e) { }
-        
-        // Pause stream when tab is hidden, resume when visible (memory optimization)
-        const handleVisibilityChange = () => {
-            if (document.hidden && es) {
-                es.close()
-                es = null
-            } else if (!document.hidden && !es) {
-                try {
-                    es = new EventSource('/api/orders/stream')
-                    es.addEventListener('summary', (ev) => {
-                        try {
-                            const msg = JSON.parse(ev.data)
-                            if (msg && msg.data) {
-                                setDashboardData(prev => ({ ...prev, revenue: msg.data.totalAmount, orders: msg.data.totalOrders, cancelled: msg.data.cancelled }))
-                            }
-                        } catch (e) { }
-                    })
-                } catch (e) { }
-            }
-        }
-        document.addEventListener('visibilitychange', handleVisibilityChange)
-        
-        return () => { 
-            document.removeEventListener('visibilitychange', handleVisibilityChange)
-            try { if (es) es.close() } catch (e) {} 
-        }
     }, [])
 
     if (loading) return <Loading />
