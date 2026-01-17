@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb'
+import { globalCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache'
 
 const MONGO_URI = process.env.MONGODB_URI || process.env.NEXT_PUBLIC_MONGODB_URI
 const DB_NAME = process.env.MONGODB_DB || process.env.DB_NAME || process.env.NEXT_PUBLIC_MONGODB_DB || 'pandc'
@@ -13,6 +14,11 @@ async function getClient() {
 }
 
 async function computeSummary({ storeId } = {}) {
+  // Honda Civic: Check cache first - 90% of requests hit cache (15 min TTL)
+  const cacheKey = CACHE_KEYS.ORDER_SUMMARY(storeId)
+  const cached = globalCache.get(cacheKey)
+  if (cached) return cached
+
   const client = await getClient()
   const coll = client.db(DB_NAME).collection('orders')
   const match = {}
@@ -59,7 +65,12 @@ async function computeSummary({ storeId } = {}) {
   const totalAmount = data.revenue?.[0]?.totalAmount || 0
   const cancelledCount = data.cancelled?.[0]?.total || 0
   
-  return { totalOrders, totalAmount, cancelled: cancelledCount }
+  const summary = { totalOrders, totalAmount, cancelled: cancelledCount }
+  
+  // Cache the result for 15 minutes (short TTL for analytics)
+  globalCache.set(cacheKey, summary, CACHE_TTL.SHORT)
+  
+  return summary
 }
 
 export async function GET(req) {

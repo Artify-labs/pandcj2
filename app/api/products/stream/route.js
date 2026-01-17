@@ -35,7 +35,11 @@ export async function GET(req) {
     let hasMore = true
     
     while (hasMore) {
-      const batch = await coll.find(filter).skip(skip).limit(limit).toArray()
+      const batch = await coll.find(filter)
+        .project({ name: 1, price: 1, id: 1, image: 1, rating: 1, storeId: 1 })  // Only needed fields
+        .skip(skip)
+        .limit(limit)
+        .toArray()
       if (batch.length === 0) {
         hasMore = false
       } else {

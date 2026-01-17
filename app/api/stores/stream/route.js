@@ -29,13 +29,17 @@ export async function GET(req) {
       }
     }
 
-    // Stream initial stores with pagination
+    // Stream initial stores with pagination and field projection
     const limit = 100
     let skip = 0
     let hasMore = true
     
     while (hasMore) {
-      const batch = await coll.find(filter).skip(skip).limit(limit).toArray()
+      const batch = await coll.find(filter)
+        .project({ name: 1, slug: 1, id: 1, image: 1, category: 1, address: 1, phone: 1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray()
       if (batch.length === 0) {
         hasMore = false
       } else {

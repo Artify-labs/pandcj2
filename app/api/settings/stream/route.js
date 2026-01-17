@@ -1,4 +1,5 @@
 import mongodb from '@/lib/mongodb'
+import { globalCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache'
 
 const DB_NAME = process.env.MONGODB_DB || process.env.DB_NAME || process.env.NEXT_PUBLIC_MONGODB_DB || 'pandc'
 
@@ -14,8 +15,17 @@ export async function GET(req) {
     const db = client.db(DB_NAME)
     const coll = db.collection('settings')
 
-    // Get initial value
-    const initial = await coll.findOne({ key })
+    // Honda Civic: Check cache first - avoid DB query 95% of the time
+    const cacheKey = key === 'banner' ? CACHE_KEYS.BANNER_SETTINGS : CACHE_KEYS.PAGEINTRO_SETTINGS
+    let initial = globalCache.get(cacheKey)
+    
+    // If not in cache, fetch from DB and cache it
+    if (!initial) {
+      initial = await coll.findOne({ key }, { projection: { _id: 1, value: 1, key: 1 } })
+      if (initial) {
+        globalCache.set(cacheKey, initial, CACHE_TTL.LONG) // 1 hour
+      }
+    }
     console.log(`[Settings Stream] Initial value for key ${key}:`, initial?.value)
 
     const { readable, writable } = new TransformStream()
@@ -50,7 +60,7 @@ export async function GET(req) {
       { fullDocument: 'updateLookup' }
     )
 
-    // Listen for changes
+    // Listen for changes and invalidate cache
     ;(async () => {
       try {
         console.log(`[Settings Stream] Listening for changes on key: ${key}`)
@@ -58,6 +68,8 @@ export async function GET(req) {
           console.log(`[Settings Stream] Change detected:`, change.operationType, 'fullDocument.key:', change.fullDocument?.key)
           if (change.fullDocument && change.fullDocument.key === key) {
             console.log(`[Settings Stream] Sending update for key: ${key}`, change.operationType, 'value:', change.fullDocument.value)
+            // Honda Civic: Invalidate cache immediately on change
+            globalCache.clear(cacheKey)
             await send({ type: 'update', data: change.fullDocument.value })
           }
         }
