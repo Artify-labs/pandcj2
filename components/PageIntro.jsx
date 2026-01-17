@@ -32,53 +32,9 @@ const PageIntro = ({ initial = null }) => {
     // Poll every 3 seconds for updates
     pollInterval = setInterval(fetchLatest, 3000)
 
-    try {
-      es = new EventSource('/api/settings/stream?key=pageintro')
-      console.log('[PageIntro] EventSource connected')
-      
-      // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
-      esTimeout = setTimeout(() => {
-        console.warn('[PageIntro] EventSource timeout (3s), closing and relying on polling')
-        if (es) {
-          es.close()
-          es = null
-        }
-      }, 3000)
-      
-      es.addEventListener('update', (ev) => {
-        try {
-          // Clear timeout once we get a message
-          if (esTimeout) {
-            clearTimeout(esTimeout)
-            esTimeout = null
-          }
-          const msg = JSON.parse(ev.data)
-          console.log('[PageIntro] EventSource update received:', msg)
-          if (mounted && msg && msg.data) {
-            setSettings(msg.data)
-          }
-        } catch (e) {
-          console.error('[PageIntro] Parse error:', e)
-        }
-      })
-
-      es.onerror = () => {
-        console.error('[PageIntro] EventSource error, closing connection and relying on polling')
-        if (es) {
-          es.close()
-          es = null
-        }
-        if (esTimeout) clearTimeout(esTimeout)
-      }
-    } catch (e) {
-      console.error('[PageIntro] EventSource setup error:', e)
-    }
-
     return () => {
       mounted = false
-      if (es) es.close()
       if (pollInterval) clearInterval(pollInterval)
-      if (esTimeout) clearTimeout(esTimeout)
     }
   }, [])
 

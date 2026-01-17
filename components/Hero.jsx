@@ -66,55 +66,10 @@ const Hero = ({ initial = null }) => {
         // Poll every 5 seconds for updates (increased from 3 to reduce load)
         pollInterval = setInterval(fetchLatest, 5000)
 
-        try {
-            es = new EventSource('/api/settings/stream?key=banner')
-            console.log('[Hero] EventSource connected')
-            
-            // Close EventSource if it doesn't establish connection after 3 seconds (fail fast)
-            esTimeout = setTimeout(() => {
-                console.warn('[Hero] EventSource timeout (3s), closing and relying on polling')
-                if (es) {
-                    es.close()
-                    es = null
-                }
-            }, 3000)
-            
-            es.addEventListener('update', (ev) => {
-                try {
-                    // Clear timeout once we get a message
-                    if (esTimeout) {
-                        clearTimeout(esTimeout)
-                        esTimeout = null
-                    }
-                    const msg = JSON.parse(ev.data)
-                    console.log('[Hero] EventSource update received:', msg)
-                    if (mounted && msg && msg.data) {
-                        console.log('[Hero] Setting banner data:', msg.data)
-                        setSettings(msg.data)
-                    }
-                } catch (e) { 
-                    console.error('[Hero] Parse error:', e)
-                }
-            })
-            
-            es.onerror = () => {
-                console.error('[Hero] EventSource error, closing connection and relying on polling')
-                if (es) {
-                    es.close()
-                    es = null
-                }
-                if (esTimeout) clearTimeout(esTimeout)
-            }
-        } catch (e) { 
-            console.error('[Hero] EventSource setup error:', e)
-        }
-
         return () => {
             mounted = false
-            if (es) es.close()
             if (pollInterval) clearInterval(pollInterval)
             if (initialFetchTimeout) clearTimeout(initialFetchTimeout)
-            if (esTimeout) clearTimeout(esTimeout)
         }
     }, [])
 
