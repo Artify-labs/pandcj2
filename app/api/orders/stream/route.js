@@ -50,6 +50,7 @@ async function computeSummary(coll, storeId) {
 export async function GET(req) {
   let changeStream = null
   let writer = null
+  let heartbeat = null
   
   try {
     const url = new URL(req.url)
@@ -111,12 +112,29 @@ export async function GET(req) {
         }
       } finally {
         if (debounceTimer) clearTimeout(debounceTimer)
+        if (heartbeat) clearInterval(heartbeat)
         try { 
           if (changeStream) await changeStream.close()
           if (writer) await writer.close() 
         } catch (e) {}
       }
     })()
+
+    // Heartbeat every 30 seconds to keep connection alive and detect dead clients
+    heartbeat = setInterval(async () => {
+      try {
+        await writer.write(new TextEncoder().encode(': heartbeat\n\n'))
+      } catch (e) {
+        if (heartbeat) clearInterval(heartbeat)
+      }
+    }, 30000)
+
+    // Close stream on client disconnect
+    req.signal.addEventListener('abort', () => {
+      if (heartbeat) clearInterval(heartbeat)
+      if (changeStream) changeStream.close().catch(() => {})
+      if (writer) writer.close().catch(() => {})
+    })
 
     const headers = new Headers({
       'Content-Type': 'text/event-stream',
@@ -128,6 +146,7 @@ export async function GET(req) {
   } catch (e) {
     console.error('Orders stream error:', e)
     try { 
+      if (heartbeat) clearInterval(heartbeat)
       if (changeStream) await changeStream.close()
       if (writer) await writer.close() 
     } catch (err) {}

@@ -6,6 +6,7 @@ const DB_NAME = process.env.MONGODB_DB || process.env.DB_NAME || process.env.NEX
 export async function GET(req) {
   let changeStream = null
   let writer = null
+  let heartbeat = null
   
   try {
     const url = new URL(req.url)
@@ -26,7 +27,6 @@ export async function GET(req) {
         globalCache.set(cacheKey, initial, CACHE_TTL.LONG) // 1 hour
       }
     }
-    console.log(`[Settings Stream] Initial value for key ${key}:`, initial?.value)
 
     const { readable, writable } = new TransformStream()
     writer = writable.getWriter()
@@ -34,7 +34,6 @@ export async function GET(req) {
     const send = async (obj) => {
       try {
         const payload = `event: update\ndata: ${JSON.stringify(obj)}\n\n`
-        console.log(`[Settings Stream] Sending payload:`, payload)
         await writer.write(new TextEncoder().encode(payload))
       } catch (e) {
         console.error('Send error:', e)
@@ -63,11 +62,8 @@ export async function GET(req) {
     // Listen for changes and invalidate cache
     ;(async () => {
       try {
-        console.log(`[Settings Stream] Listening for changes on key: ${key}`)
         for await (const change of changeStream) {
-          console.log(`[Settings Stream] Change detected:`, change.operationType, 'fullDocument.key:', change.fullDocument?.key)
           if (change.fullDocument && change.fullDocument.key === key) {
-            console.log(`[Settings Stream] Sending update for key: ${key}`, change.operationType, 'value:', change.fullDocument.value)
             // Honda Civic: Invalidate cache immediately on change
             globalCache.clear(cacheKey)
             await send({ type: 'update', data: change.fullDocument.value })
@@ -78,12 +74,29 @@ export async function GET(req) {
           console.error(`[Settings Stream] Watch error for key ${key}:`, e?.message || e)
         }
       } finally {
+        if (heartbeat) clearInterval(heartbeat)
         try { 
           if (changeStream) await changeStream.close()
           if (writer) await writer.close() 
         } catch (e) {}
       }
     })()
+
+    // Heartbeat every 30 seconds to keep connection alive and detect dead clients
+    heartbeat = setInterval(async () => {
+      try {
+        await writer.write(new TextEncoder().encode(': heartbeat\n\n'))
+      } catch (e) {
+        if (heartbeat) clearInterval(heartbeat)
+      }
+    }, 30000)
+
+    // Close stream on client disconnect
+    req.signal.addEventListener('abort', () => {
+      if (heartbeat) clearInterval(heartbeat)
+      if (changeStream) changeStream.close().catch(() => {})
+      if (writer) writer.close().catch(() => {})
+    })
 
     const headers = new Headers({
       'Content-Type': 'text/event-stream',
@@ -95,6 +108,7 @@ export async function GET(req) {
   } catch (e) {
     console.error('Settings stream error:', e)
     try { 
+      if (heartbeat) clearInterval(heartbeat)
       if (changeStream) await changeStream.close()
       if (writer) await writer.close() 
     } catch (err) {}

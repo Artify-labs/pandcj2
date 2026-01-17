@@ -18,10 +18,11 @@ export async function GET(req) {
     const db = client.db(DB_NAME);
     const ratingsCollection = db.collection('ratings');
 
-    // Fetch reviews for this product, sorted by newest first
+    // Fetch reviews for this product, sorted by newest first - LIMIT to prevent memory leak
     const reviews = await ratingsCollection
       .find({ productId })
       .sort({ createdAt: -1 })
+      .limit(100) // Limit to 100 latest reviews
       .toArray();
 
     return new Response(
