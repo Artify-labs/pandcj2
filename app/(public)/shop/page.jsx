@@ -153,25 +153,27 @@ function ShopContent() {
                     {/* Main Content */}
                     <div className="flex-1">
                         {/* Mobile Filter Bar */}
-                        <div className="md:hidden mb-4 flex items-center justify-between gap-2">
+                        <div className="md:hidden mb-4 flex items-center gap-2 flex-wrap">
                             <button
                                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                                className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex-shrink-0"
                             >
                                 <FilterIcon size={16} />
                                 Filters
                             </button>
-                            <select
-                                value={selectedSort}
-                                onChange={(e) => handleSortChange(e.target.value)}
-                                className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-                            >
-                                {sortOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="flex-1 min-w-[150px]">
+                                <select
+                                    value={selectedSort}
+                                    onChange={(e) => handleSortChange(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                                >
+                                    {sortOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         {/* Mobile Filters Dropdown */}
