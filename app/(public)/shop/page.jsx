@@ -1,10 +1,12 @@
 'use client'
-import { Suspense } from "react"
+import { Suspense, useState, useEffect } from "react"
 import ProductCard from "@/components/ProductCard"
+import ProductCardSkeleton from "@/components/ProductCardSkeleton"
 import { MoveLeftIcon, FilterIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
 import { useProductFilters } from "@/lib/hooks/useProductFilters"
+import { useProductRatings } from "@/lib/hooks/useProductRatings"
 import PriceRangeFilter from "@/components/filters/PriceRangeFilter"
 import CategoryFilter from "@/components/filters/CategoryFilter"
 
@@ -14,6 +16,12 @@ function ShopContent() {
     const router = useRouter()
 
     const products = useSelector(state => state.product.list || [])
+    
+    // Extract product IDs for batch rating fetch
+    const productIds = products.map(p => p.id)
+    
+    // Fetch all ratings at once instead of per-product (solves N+1 problem)
+    const { ratings, getRating, loading: loadingRatings } = useProductRatings(productIds)
     
     const categories = ['Earrings', 'Necklace', 'Heavy Necklace', 'Fashionable Earrings', 'Others']
     const sortOptions = [
@@ -172,8 +180,17 @@ function ShopContent() {
 
                         {/* Products Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 mx-auto mb-32">
-                            {filteredProducts.length > 0 ? (
-                                filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)
+                            {loadingRatings ? (
+                                // Show skeletons while loading ratings
+                                Array(8).fill('').map((_, i) => <ProductCardSkeleton key={i} />)
+                            ) : filteredProducts.length > 0 ? (
+                                filteredProducts.map((product) => (
+                                    <ProductCard 
+                                        key={product.id} 
+                                        product={product}
+                                        rating={getRating(product.id) || 0}
+                                    />
+                                ))
                             ) : (
                                 <div className="col-span-full py-12 text-center text-slate-500">
                                     <p className="mb-2">No products found</p>

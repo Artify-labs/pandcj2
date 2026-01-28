@@ -1,18 +1,20 @@
 "use client"
-import { StarIcon, Heart, MessageCircle, ShoppingCartIcon } from 'lucide-react'
+import { StarIcon, Heart, MessageCircle, ShoppingCartIcon, Eye } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addToWishlist, removeFromWishlist } from '@/lib/features/wishlist/wishlistSlice'
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import ReviewForm from './ReviewForm'
+import QuickViewModal from './QuickViewModal'
 import { generateProductSlug } from '@/lib/productSlug'
 import toast from 'react-hot-toast'
 
-const ProductCard = ({ product }) => {
+// ProductCard now accepts rating as prop instead of fetching individually
+const ProductCard = ({ product, rating = 0 }) => {
 
     const dispatch = useDispatch()
     const router = useRouter()
@@ -20,7 +22,7 @@ const ProductCard = ({ product }) => {
     const wishlistItems = useSelector(state => state.wishlist?.items || [])
     const inWishlist = wishlistItems.find(i => i.id === product.id)
     const [showReviewForm, setShowReviewForm] = useState(false)
-    const [rating, setRating] = useState(0)
+    const [showQuickView, setShowQuickView] = useState(false)
 
     const toggleWishlist = (e) => {
         e.preventDefault()
@@ -28,31 +30,6 @@ const ProductCard = ({ product }) => {
         if (inWishlist) dispatch(removeFromWishlist(product.id))
         else dispatch(addToWishlist(product))
     }
-
-    // Fetch reviews from API to get real ratings
-    useEffect(() => {
-        if (product?.id) {
-            const fetchReviews = async () => {
-                try {
-                    const res = await fetch(`/api/ratings/product?productId=${product.id}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        const reviews = data.data || [];
-                        if (reviews.length > 0) {
-                            const avgRating = reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length;
-                            setRating(Math.round(avgRating));
-                        } else {
-                            setRating(0);
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error fetching reviews:', err);
-                    setRating(0);
-                }
-            };
-            fetchReviews();
-        }
-    }, [product?.id])
 
     const handleReviewClick = (e) => {
         if (e) {
@@ -62,9 +39,14 @@ const ProductCard = ({ product }) => {
         if (user) {
             setShowReviewForm(true)
         } else {
-            // Redirect to sign in or show message
             alert('Please sign in to write a review')
         }
+    }
+
+    const handleQuickView = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setShowQuickView(true)
     }
 
     const handleAddToCart = (e) => {
@@ -86,6 +68,8 @@ const ProductCard = ({ product }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
     const originalPrice = product.originalPrice || product.mrp
     const discountPercent = originalPrice ? Math.round(((originalPrice - product.price) / originalPrice) * 100) : 0
+    const isOutOfStock = product.inStock === false || product.stock === 'out_of_stock'
+    const isLowStock = product.stock < 5 && product.stock > 0
 
     return (
         <>
@@ -98,9 +82,26 @@ const ProductCard = ({ product }) => {
                             <div className='w-full h-full flex items-center justify-center text-slate-400 text-xs text-center'>No Image</div>
                         )}
                     </div>
-                    {(product.inStock === false || product.stock === 'out_of_stock') && (
+                    
+                    {/* Stock Status Overlay */}
+                    {isOutOfStock && (
                         <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
                             <span className="bg-rose-100 text-rose-600 px-2 sm:px-3 py-1 rounded-md font-medium text-xs sm:text-sm">Out of stock</span>
+                        </div>
+                    )}
+
+                    {/* Stock Status Badge */}
+                    {!isOutOfStock && (
+                        <div className='absolute left-1.5 sm:left-2 bottom-2 sm:bottom-3'>
+                            {isLowStock ? (
+                                <span className='text-xs sm:text-sm font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full inline-block'>
+                                    Low Stock
+                                </span>
+                            ) : (
+                                <span className='text-xs sm:text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full inline-block'>
+                                    In Stock
+                                </span>
+                            )}
                         </div>
                     )}
                     <div className='pt-2 px-1 sm:px-0'>
@@ -141,6 +142,16 @@ const ProductCard = ({ product }) => {
                     <MessageCircle size={14} className='sm:size-[16px]' />
                 </button>
 
+                {/* Quick View Button - visible on hover (desktop) only */}
+                <button
+                    onClick={handleQuickView}
+                    className='absolute left-12 sm:left-12 top-1.5 sm:top-2 p-1.5 sm:p-2 rounded-full bg-white/90 text-slate-600 shadow-lg opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 hover:shadow-xl active:scale-90'
+                    aria-label="Quick view"
+                    title="Quick View"
+                >
+                    <Eye size={14} className='sm:size-[16px]' />
+                </button>
+
                 {/* Add to Cart Button - Bottom Right (always visible) */}
                 <button
                     onClick={handleAddToCart}
@@ -160,6 +171,15 @@ const ProductCard = ({ product }) => {
                     productName={product.name}
                     onClose={() => setShowReviewForm(false)}
                     onSuccess={() => {}}
+                />
+            )}
+
+            {/* Quick View Modal */}
+            {showQuickView && (
+                <QuickViewModal
+                    product={product}
+                    rating={rating}
+                    onClose={() => setShowQuickView(false)}
                 />
             )}
         </>
