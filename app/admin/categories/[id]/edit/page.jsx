@@ -175,7 +175,12 @@ if (!formData.link.trim()) {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                        Category Link */}
+                            placeholder="e.g., Women's Jewelry, Men's Clothing"
+                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none"
+                        />
+                    </div>
+
+                    {/* Category Link */}
                     <div className='mb-8'>
                         <label className='block text-sm font-semibold text-slate-900 mb-2'>
                             Category Link *
@@ -186,11 +191,6 @@ if (!formData.link.trim()) {
                             value={formData.link}
                             onChange={handleInputChange}
                             placeholder="e.g., /shop?category=Jewelry"
-                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none"
-                        />
-                    </div>
-
-                    {/*     placeholder="e.g., Women's Jewelry, Men's Clothing"
                             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none"
                         />
                     </div>

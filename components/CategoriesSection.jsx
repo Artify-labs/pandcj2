@@ -37,14 +37,14 @@ const CategoriesSection = () => {
         <div className='py-8 sm:py-12 md:py-16 mx-3 sm:mx-6 md:mx-8'>
             <div className='max-w-7xl mx-auto'>
                 {/* Section Header with Title and Admin Link */}
-                <div className='flex items-center justify-between mb-8'>
+                <div className='flex items-center justify-center mb-8'>
                     <h2 className='text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900'>
                         Shop by Category
                     </h2>
                     {isAdmin && (
                         <Link
                             href='/admin/categories'
-                            className='flex items-center gap-2 px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors text-xs sm:text-sm'
+                            className='absolute right-6 flex items-center gap-2 px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors text-xs sm:text-sm'
                             title='Manage Categories'
                         >
                             <Settings size={18} />
