@@ -77,31 +77,24 @@ const ProductCard = ({ product, rating = 0 }) => {
                 <Link href={`/product/${generateProductSlug(product.name, product.id)}`} className='block rounded-md hover:shadow-md transition'>
                     <div className='bg-[#F5F5F5] h-40 sm:h-56 md:h-68 rounded-lg flex items-center justify-center overflow-hidden relative'>
                         {product?.images && product.images.length > 0 ? (
-                            <Image width={500} height={500} className='object-cover w-full h-full' src={product.images[0]} alt={product.name || ''} />
+                            <Image 
+                                width={500} 
+                                height={500} 
+                                className={`object-cover w-full h-full transition-all ${isOutOfStock ? 'blur-sm' : ''}`}
+                                src={product.images[0]} 
+                                alt={product.name || ''} 
+                            />
                         ) : (
                             <div className='w-full h-full flex items-center justify-center text-slate-400 text-xs text-center'>No Image</div>
                         )}
                     </div>
                     
-                    {/* Stock Status Overlay */}
+                    {/* Out of Stock Overlay with Blurred Image */}
                     {isOutOfStock && (
-                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
-                            <span className="bg-rose-100 text-rose-600 px-2 sm:px-3 py-1 rounded-md font-medium text-xs sm:text-sm">Out of stock</span>
-                        </div>
-                    )}
-
-                    {/* Stock Status Badge */}
-                    {!isOutOfStock && (
-                        <div className='absolute left-1.5 sm:left-2 bottom-2 sm:bottom-3'>
-                            {isLowStock ? (
-                                <span className='text-xs sm:text-sm font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full inline-block'>
-                                    Low Stock
-                                </span>
-                            ) : (
-                                <span className='text-xs sm:text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full inline-block'>
-                                    In Stock
-                                </span>
-                            )}
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
+                            <span className="bg-rose-600 text-white px-3 sm:px-4 py-2 rounded-md font-bold text-xs sm:text-sm">
+                                Out of Stock
+                            </span>
                         </div>
                     )}
                     <div className='pt-2 px-1 sm:px-0'>

@@ -1,7 +1,6 @@
 'use client'
 import { Suspense, useState, useEffect } from "react"
 import ProductCard from "@/components/ProductCard"
-import ProductCardSkeleton from "@/components/ProductCardSkeleton"
 import { MoveLeftIcon, FilterIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
@@ -180,10 +179,7 @@ function ShopContent() {
 
                         {/* Products Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 mx-auto mb-32">
-                            {loadingRatings ? (
-                                // Show skeletons while loading ratings
-                                Array(8).fill('').map((_, i) => <ProductCardSkeleton key={i} />)
-                            ) : filteredProducts.length > 0 ? (
+                            {filteredProducts.length > 0 ? (
                                 filteredProducts.map((product) => (
                                     <ProductCard 
                                         key={product.id} 
