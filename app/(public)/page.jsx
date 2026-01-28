@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import Newsletter from "@/components/Newsletter";
 import OurSpecs from "@/components/OurSpec";
 import LatestProducts from "@/components/LatestProducts";
+import CategoriesSection from "@/components/CategoriesSection";
 import { getBanner } from '@/lib/banner'
 
 export const metadata = {
@@ -65,6 +66,7 @@ export default async function Home() {
             />
             <div>
                 <Hero initial={banner} />
+                <CategoriesSection />
                 <LatestProducts />
                 <BestSelling />
                 <OurSpecs />

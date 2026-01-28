@@ -1,0 +1,192 @@
+'use client'
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import toast from 'react-hot-toast'
+import { Upload, X } from 'lucide-react'
+
+const AddCategory = () => {
+    const router = useRouter()
+    const [formData, setFormData] = useState({
+        name: '',
+        image: ''
+    })
+    const [imagePreview, setImagePreview] = useState(null)
+    const [uploading, setUploading] = useState(false)
+    const [submitting, setSubmitting] = useState(false)
+
+    const handleImageChange = async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        try {
+            setUploading(true)
+            const formDataUpload = new FormData()
+            formDataUpload.append('file', file)
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formDataUpload
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                const imageUrl = data.url
+                setFormData(prev => ({ ...prev, image: imageUrl }))
+                setImagePreview(imageUrl)
+                toast.success('Image uploaded successfully')
+            } else {
+                toast.error('Failed to upload image')
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error)
+            toast.error('Failed to upload image')
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        if (!formData.name.trim()) {
+            toast.error('Category name is required')
+            return
+        }
+
+        if (!formData.image) {
+            toast.error('Category image is required')
+            return
+        }
+
+        try {
+            setSubmitting(true)
+            const res = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+
+            if (res.ok) {
+                toast.success('Category added successfully')
+                router.push('/admin/categories')
+            } else {
+                const error = await res.json()
+                toast.error(error.message || 'Failed to add category')
+            }
+        } catch (error) {
+            console.error('Error adding category:', error)
+            toast.error('Failed to add category')
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    return (
+        <div className='min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6'>
+            <div className='max-w-2xl mx-auto'>
+                {/* Header */}
+                <div className='mb-8'>
+                    <h1 className='text-3xl font-bold text-slate-900'>Add New Category</h1>
+                    <p className='text-slate-600 mt-2'>Create a new product category</p>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className='bg-white rounded-lg shadow-sm p-8'>
+                    {/* Category Name */}
+                    <div className='mb-8'>
+                        <label className='block text-sm font-semibold text-slate-900 mb-2'>
+                            Category Name *
+                        </label>
+                        <input
+                            type='text'
+                            name='name'
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            placeholder='e.g., Women\'s Jewelry, Men\'s Clothing'
+                            className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none'
+                        />
+                    </div>
+
+                    {/* Image Upload */}
+                    <div className='mb-8'>
+                        <label className='block text-sm font-semibold text-slate-900 mb-4'>
+                            Category Image (1080x1080px) *
+                        </label>
+
+                        {imagePreview ? (
+                            <div className='relative w-48 h-48 mx-auto mb-4'>
+                                <div className='relative w-full h-full rounded-full overflow-hidden bg-slate-100'>
+                                    <Image
+                                        src={imagePreview}
+                                        alt='Preview'
+                                        fill
+                                        className='object-cover'
+                                    />
+                                </div>
+                                <button
+                                    type='button'
+                                    onClick={() => {
+                                        setImagePreview(null)
+                                        setFormData(prev => ({ ...prev, image: '' }))
+                                    }}
+                                    className='absolute -top-2 -right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors'
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        ) : (
+                            <label className='flex items-center justify-center w-full px-6 py-8 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-yellow-500 transition-colors bg-slate-50'>
+                                <div className='text-center'>
+                                    <Upload size={40} className='mx-auto text-slate-400 mb-2' />
+                                    <p className='text-sm font-medium text-slate-900'>
+                                        Click to upload or drag and drop
+                                    </p>
+                                    <p className='text-xs text-slate-500 mt-1'>
+                                        PNG, JPG, GIF up to 10MB
+                                    </p>
+                                </div>
+                                <input
+                                    type='file'
+                                    accept='image/*'
+                                    onChange={handleImageChange}
+                                    disabled={uploading}
+                                    className='hidden'
+                                />
+                            </label>
+                        )}
+
+                        {uploading && (
+                            <p className='text-sm text-slate-600 mt-2 text-center'>Uploading image...</p>
+                        )}
+                    </div>
+
+                    {/* Submit Buttons */}
+                    <div className='flex items-center gap-3 pt-6 border-t border-slate-200'>
+                        <button
+                            type='button'
+                            onClick={() => router.back()}
+                            className='px-6 py-2 border border-slate-300 text-slate-900 rounded-lg hover:bg-slate-50 transition-colors font-medium'
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type='submit'
+                            disabled={submitting || uploading}
+                            className='px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            {submitting ? 'Creating...' : 'Create Category'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
+export default AddCategory
