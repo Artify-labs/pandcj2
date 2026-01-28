@@ -104,12 +104,12 @@ const AddCategory = () => {
                             Category Name *
                         </label>
                         <input
-                            type='text'
-                            name='name'
+                            type="text"
+                            name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            placeholder='e.g., Women\'s Jewelry, Men\'s Clothing'
-                            className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none'
+                            placeholder="e.g., Women's Jewelry, Men's Clothing"
+                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none"
                         />
                     </div>
 
