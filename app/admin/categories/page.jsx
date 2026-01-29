@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Trash2, Edit, Plus } from 'lucide-react'
+import ConfirmDialog from '@/components/ConfirmDialog'
 
 const CategoriesAdmin = () => {
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
+    const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null })
     const router = useRouter()
 
     useEffect(() => {
@@ -32,7 +34,12 @@ const CategoriesAdmin = () => {
     }
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this category?')) return
+        setDeleteConfirm({ open: true, id })
+    }
+
+    const handleConfirmDelete = async () => {
+        const id = deleteConfirm.id
+        setDeleteConfirm({ open: false, id: null })
 
         try {
             const res = await fetch(`/api/categories/${id}`, {
@@ -47,13 +54,7 @@ const CategoriesAdmin = () => {
             } else {
                 // If it's a corrupted ID error, offer to force delete from local state
                 if (data.message.includes('corrupted data')) {
-                    const forceDelete = window.confirm(
-                        'This category has corrupted data.\n\nDo you want to remove it from the list? (This will only remove it from display.)'
-                    )
-                    if (forceDelete) {
-                        setCategories(categories.filter(cat => cat._id !== id))
-                        toast.success('Category removed from list')
-                    }
+                    toast.error(data.message || 'Failed to delete category')
                 } else {
                     toast.error(data.message || 'Failed to delete category')
                 }
@@ -62,6 +63,10 @@ const CategoriesAdmin = () => {
             console.error('Error deleting category:', error)
             toast.error('Failed to delete category')
         }
+    }
+
+    const handleCancelDelete = () => {
+        setDeleteConfirm({ open: false, id: null })
     }
 
     return (
@@ -167,6 +172,17 @@ const CategoriesAdmin = () => {
                     </div>
                 )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={deleteConfirm.open}
+                title="Delete Category"
+                message="Are you sure you want to delete this category?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={handleConfirmDelete}
+                onClose={handleCancelDelete}
+            />
         </div>
     )
 }

@@ -135,10 +135,10 @@ const ProductCard = ({ product, rating = 0 }) => {
                     <MessageCircle size={14} className='sm:size-[16px]' />
                 </button>
 
-                {/* Quick View Button - visible on hover (desktop) only */}
+                {/* Quick View Button - visible on mobile and hover (desktop) */}
                 <button
                     onClick={handleQuickView}
-                    className='absolute left-12 sm:left-12 top-1.5 sm:top-2 p-1.5 sm:p-2 rounded-full bg-white/90 text-slate-600 shadow-lg opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 hover:shadow-xl active:scale-90'
+                    className='absolute left-12 sm:left-12 top-1.5 sm:top-2 p-1.5 sm:p-2 rounded-full bg-white/90 text-slate-600 shadow-lg opacity-100 sm:group-hover:opacity-100 transition-opacity duration-200 hover:shadow-xl active:scale-90'
                     aria-label="Quick view"
                     title="Quick View"
                 >
