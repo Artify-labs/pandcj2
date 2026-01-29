@@ -12,6 +12,9 @@ export async function GET(request, { params }) {
     try {
         let { id } = params
         
+        // Decode the ID in case it was URL encoded
+        id = decodeURIComponent(id)
+        
         // Handle invalid ObjectId format - log and return clear error
         if (!id || typeof id !== 'string' || id.length < 24) {
             console.error('[Categories API] Invalid ID format:', id, 'Length:', id?.length)
@@ -60,7 +63,11 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
     try {
-        const { id } = params
+        let { id } = params
+        
+        // Decode the ID in case it was URL encoded
+        id = decodeURIComponent(id)
+        
         const body = await request.json()
         const { name, image } = body
 
@@ -117,7 +124,10 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        const { id } = params
+        let { id } = params
+        
+        // Decode the ID in case it was URL encoded
+        id = decodeURIComponent(id)
         
         // Validate ID format using ObjectId.isValid like other methods
         if (!ObjectId.isValid(id)) {
