@@ -117,19 +117,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        let { id } = params
+        const { id } = params
         
-        // Validate ID format
-        if (!id || typeof id !== 'string' || id.length < 24) {
-            console.error('[Categories API DELETE] Invalid ID format:', id, 'Length:', id?.length)
-            return Response.json({
-                success: false,
-                message: 'Invalid category ID format - corrupted data. Please contact support.'
-            }, { status: 400 })
-        }
-
+        // Validate ID format using ObjectId.isValid like other methods
         if (!ObjectId.isValid(id)) {
-            console.error('[Categories API DELETE] ObjectId validation failed for:', id)
+            console.error('[Categories API DELETE] Invalid ObjectId for:', id)
             return Response.json({
                 success: false,
                 message: 'Invalid category ID'
